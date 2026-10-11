@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load chamados_tags %}
+{% block title %}Painel de instalacao{% endblock %}
+{% block titulo_pagina %}Painel de instalacao{% endblock %}
+{% block content %}
+<div class="cabecalho-pagina">
+  <div>
+    <h2><i class="bi bi-router" style="color:#7c3aed"></i> Instalacao</h2>
+    <p>Ativacoes e execucoes de servico: andamento, prazos, pendencias e agenda da semana.</p>
+  </div>
+</div>
+{% include "dashboard/_nav.html" %}
+
+<div class="row g-3 mb-3">
+  {% url 'chamados:lista' as base %}{% with link=base|add:"?tipo=INSTALACAO" %}{% include "dashboard/_kpis_sla.html" with ind=ind link=link %}{% endwith %}
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-6">{% include "dashboard/_grafico_status.html" with titulo="Atividades por status" icone="bi-headset" dados=status_chamados id="g-atividades" %}</div>
+  <div class="col-lg-6">{% include "dashboard/_grafico_status.html" with titulo="Ordens de servico por status" icone="bi-tools" dados=status_os id="g-os" %}</div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4">{% include "dashboard/_contagem.html" with titulo="Em aberto por servico" icone="bi-diagram-3" itens=por_servico vazio="-" %}</div>
+  <div class="col-md-8">
+    <div class="cartao cartao-tabela h-100">
+      <div class="cartao-titulo px-3 pt-3"><i class="bi bi-calendar-week text-primary"></i> Agenda dos proximos 7 dias</div>
+      <div class="table-responsive">
+      <table class="table tabela-erp">
+        <thead><tr><th>Quando</th><th>OS</th><th>Local</th><th>Tecnico</th></tr></thead>
+        <tbody>
+        {% for o in agenda %}
+          <tr><td class="small text-nowrap">{{ o.data_agendada|date:"D d/m H:i" }}</td>
+            <td><a href="{% url 'ordens:detalhe' o.pk %}">{{ o.numero }}</a><div class="small text-muted">{{ o.titulo|truncatechars:40 }}</div></td>
+            <td class="small">{{ o.chamado.cliente_final|default:o.chamado.endereco|truncatechars:40 }}</td>
+            <td class="small">{{ o.responsavel|default:"-" }}</td></tr>
+        {% empty %}
+          <tr><td colspan="4" class="vazio py-3">Nenhuma instalacao agendada para os proximos 7 dias.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-6">
+    <div class="cartao cartao-tabela h-100">
+      <div class="cartao-titulo px-3 pt-3"><i class="bi bi-exclamation-triangle text-warning"></i> Com pre-requisitos pendentes</div>
+      <div class="table-responsive">
+      <table class="table tabela-erp">
+        <thead><tr><th>Atividade</th><th>Pendencias</th><th>SLA</th></tr></thead>
+        <tbody>
+        {% for c in com_pendencia %}
+          <tr><td><a href="{% url 'chamados:detalhe' c.pk %}">{{ c.numero }}</a><div class="small text-muted">{{ c.cliente_final|default:c.cliente }}</div></td>
+            <td class="small">{{ c.detalhes.pendencias|default:"nao descritas" }}</td>
+            <td class="text-nowrap">{% sla_badge c %}</td></tr>
+        {% empty %}
+          <tr><td colspan="3" class="vazio py-3">Nenhuma instalacao travada por pre-requisito.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="cartao cartao-tabela h-100">
+      <div class="cartao-titulo px-3 pt-3"><i class="bi bi-hourglass text-primary"></i> Aguardando OS (sem execucao gerada)</div>
+      <div class="table-responsive">
+      <table class="table tabela-erp">
+        <thead><tr><th>Atividade</th><th>Titulo</th><th>SLA</th></tr></thead>
+        <tbody>
+        {% for c in sem_os %}
+          <tr><td><a href="{% url 'chamados:detalhe' c.pk %}">{{ c.numero }}</a></td>
+            <td class="small">{{ c.titulo|truncatechars:45 }}</td>
+            <td class="text-nowrap">{% sla_badge c %}</td></tr>
+        {% empty %}
+          <tr><td colspan="3" class="vazio py-3">Todas as instalacoes em aberto ja tem OS.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cartao cartao-tabela">
+  <div class="cartao-titulo px-3 pt-3 justify-content-between">
+    <span><i class="bi bi-list-ol text-primary"></i> Fila de instalacao por prazo de SLA</span>
+    <a class="small fw-normal" href="{% url 'chamados:lista' %}?tipo=INSTALACAO">Ver todas</a>
+  </div>
+  {% with fila=ind.fila|slice:":10" %}{% include "dashboard/_fila.html" %}{% endwith %}
+</div>
+{% endblock %}
+{% block scripts %}{% include "dashboard/_scripts.html" %}{% endblock %}

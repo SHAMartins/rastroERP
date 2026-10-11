@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Movimentacoes{% endblock %}
+{% block titulo_pagina %}Movimentacoes de estoque{% endblock %}
+{% block content %}
+<a class="small text-decoration-none" href="{% url 'estoque:produtos' %}"><i class="bi bi-arrow-left"></i> Produtos</a>
+<div class="cabecalho-pagina mt-2">
+  <div>
+    <h2>Movimentacoes</h2>
+    <p>Livro-razao do estoque: nenhuma linha e editada ou apagada. Correcoes entram como ajuste justificado.</p>
+  </div>
+</div>
+<div class="cartao cartao-tabela">
+  <form class="row g-2 p-3 border-bottom" method="get">
+    <div class="col-md-6">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0" style="border-radius:10px 0 0 10px"><i class="bi bi-search text-muted"></i></span>
+        <input class="form-control border-start-0" name="q" value="{{ busca }}" placeholder="Produto, codigo, numero da OS ou justificativa">
+      </div>
+    </div>
+    <div class="col-md-4"><select class="form-select" name="tipo" data-autoenvio>
+      <option value="">Todos os tipos</option>
+      {% for valor, nome in tipos %}<option value="{{ valor }}"{% if valor == tipo %} selected{% endif %}>{{ nome }}</option>{% endfor %}
+    </select></div>
+    <div class="col-md-2"><button class="btn btn-outline-primary w-100">Filtrar</button></div>
+  </form>
+  <div class="table-responsive">
+  <table class="table tabela-erp">
+    <thead><tr><th>Quando</th><th>Produto</th><th>Tipo</th><th class="text-end">Qtd.</th><th>Origem / justificativa</th><th>Por</th></tr></thead>
+    <tbody>
+    {% for m in pagina %}
+      <tr>
+        <td class="small text-nowrap">{{ m.criado_em|date:"d/m/Y H:i" }}</td>
+        <td><a href="{% url 'estoque:produto' m.produto.pk %}">{{ m.produto.codigo }}</a> <span class="small">{{ m.produto.nome }}</span></td>
+        <td><span class="pilula mov-{{ m.tipo }}">{{ m.get_tipo_display }}</span></td>
+        <td class="text-end fw-semibold {% if m.quantidade < 0 %}text-danger{% else %}text-success{% endif %}">{% if m.quantidade > 0 %}+{% endif %}{{ m.quantidade }}</td>
+        <td class="small">{% if m.ordem %}<a href="{% url 'ordens:detalhe' m.ordem.pk %}">OS {{ m.ordem.numero }}</a>{% else %}{{ m.observacao|default:"-" }}{% endif %}</td>
+        <td class="small">{{ m.usuario|default:"-" }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="vazio"><i class="bi bi-journal"></i>Nenhuma movimentacao encontrada.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% if pagina.has_other_pages %}
+  <nav class="d-flex gap-2 align-items-center justify-content-end p-3 border-top">
+    {% if pagina.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ busca|urlencode }}&tipo={{ tipo }}&pagina={{ pagina.previous_page_number }}"><i class="bi bi-chevron-left"></i></a>{% endif %}
+    <span class="small text-muted">Pagina {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ busca|urlencode }}&tipo={{ tipo }}&pagina={{ pagina.next_page_number }}"><i class="bi bi-chevron-right"></i></a>{% endif %}
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

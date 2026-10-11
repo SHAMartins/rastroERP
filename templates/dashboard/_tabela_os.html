@@ -1,0 +1,17 @@
+<div class="table-responsive">
+<table class="table tabela-erp">
+  <thead><tr><th>OS</th><th>Atividade / local</th><th>Agendada</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for o in ordens %}
+    <tr>
+      <td class="text-nowrap"><a href="{% url 'ordens:detalhe' o.pk %}">{{ o.numero }}</a></td>
+      <td>{{ o.titulo|truncatechars:40 }}<div class="small text-muted">{{ o.chamado.cliente_final|default:o.chamado.endereco|truncatechars:40 }}</div></td>
+      <td class="small text-nowrap">{{ o.data_agendada|date:"d/m H:i"|default:"-" }}</td>
+      <td>{% include "ordens/_status.html" %}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4" class="vazio"><i class="bi bi-inbox"></i>{{ vazio }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>

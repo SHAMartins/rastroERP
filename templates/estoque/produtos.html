@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Estoque{% endblock %}
+{% block titulo_pagina %}Estoque{% endblock %}
+{% block content %}
+<div class="cabecalho-pagina">
+  <div>
+    <h2>Produtos</h2>
+    <p>Saldo calculado pela soma das movimentacoes. Para mudar o saldo, registre uma entrada ou um ajuste.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary" href="{% url 'estoque:movimentacoes' %}"><i class="bi bi-arrow-left-right"></i> Movimentacoes</a>
+    {% if perms.estoque.add_produto %}<a class="btn btn-primary" href="{% url 'estoque:produto_novo' %}"><i class="bi bi-plus-lg"></i> Novo produto</a>{% endif %}
+  </div>
+</div>
+
+<ul class="nav nav-pills mb-3 gap-1">
+  <li class="nav-item"><a class="nav-link{% if not filtro %} active{% endif %}" href="?">Ativos</a></li>
+  <li class="nav-item"><a class="nav-link{% if filtro == 'baixo' %} active{% endif %}" href="?filtro=baixo"><i class="bi bi-exclamation-triangle"></i> Estoque baixo</a></li>
+  <li class="nav-item"><a class="nav-link{% if filtro == 'inativos' %} active{% endif %}" href="?filtro=inativos">Inativos</a></li>
+</ul>
+
+{% for i in series %}
+<div class="alert alert-info d-flex gap-2 align-items-start">
+  <i class="bi bi-upc-scan fs-5"></i>
+  <div><strong>SN {{ i.numero_serie }}</strong> - <a class="alert-link" href="{% url 'estoque:produto' i.produto.pk %}">{{ i.produto.nome }}</a>
+    · <span class="pilula serie-{{ i.status }}">{{ i.get_status_display }}</span>
+    {% if i.saida.ordem %}· instalado na <a class="alert-link" href="{% url 'ordens:detalhe' i.saida.ordem.pk %}">OS {{ i.saida.ordem.numero }}</a>
+      ({{ i.saida.ordem.chamado.cliente_final|default:i.saida.ordem.chamado.endereco }}){% elif i.saida %}· {{ i.saida.observacao }}{% endif %}</div>
+</div>
+{% endfor %}
+
+<div class="cartao cartao-tabela">
+  <form class="row g-2 p-3 border-bottom" method="get" id="busca-produtos">
+    <input type="hidden" name="filtro" value="{{ filtro }}">
+    <div class="col-md-5">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0" style="border-radius:10px 0 0 10px"><i class="bi bi-search text-muted"></i></span>
+        <input class="form-control border-start-0" name="q" id="busca-q" value="{{ busca }}" placeholder="Codigo, nome, modelo ou no de serie">
+        <button type="button" class="btn btn-outline-secondary" data-scanner-alvo="#busca-q" title="Ler com a camera" aria-label="Ler codigo com a camera"><i class="bi bi-upc-scan"></i></button>
+      </div>
+    </div>
+    <div class="col-md-2"><select class="form-select" name="tipo" data-autoenvio>
+      <option value="">Todos os tipos</option>
+      {% for t in tipos %}<option value="{{ t }}"{% if t == tipo %} selected{% endif %}>{{ t }}</option>{% endfor %}
+    </select></div>
+    <div class="col-md-3"><select class="form-select" name="cliente" data-autoenvio>
+      <option value="">Todos (empresa e clientes)</option>
+      <option value="empresa"{% if cliente == "empresa" %} selected{% endif %}>Estoque da empresa</option>
+      {% for c in clientes %}<option value="{{ c.pk }}"{% if cliente == c.pk|stringformat:"d" %} selected{% endif %}>Material de {{ c.nome }}</option>{% endfor %}
+    </select></div>
+    <div class="col-md-2"><button class="btn btn-outline-primary w-100">Filtrar</button></div>
+  </form>
+  <div class="table-responsive">
+  <table class="table tabela-erp">
+    <thead><tr><th>Codigo</th><th>Produto</th><th>Tipo / modelo</th><th>Dono</th><th class="text-end">Saldo</th><th class="text-end">Minimo</th><th>Situacao</th></tr></thead>
+    <tbody>
+    {% for p in pagina %}
+      <tr>
+        <td class="text-nowrap"><a href="{% url 'estoque:produto' p.pk %}">{{ p.codigo }}</a></td>
+        <td>{{ p.nome }}{% if p.controla_serie %} <i class="bi bi-upc text-muted" title="Controla numero de serie"></i>{% endif %}</td>
+        <td class="small">{{ p.tipo|default:"-" }}{% if p.modelo %}<div class="text-muted">{{ p.modelo }}</div>{% endif %}</td>
+        <td class="small">{% if p.cliente %}{{ p.cliente }}{% else %}<span class="text-muted">Empresa</span>{% endif %}</td>
+        <td class="text-end fw-semibold">{{ p.saldo_atual }} <span class="text-muted small fw-normal">{{ p.unidade }}</span></td>
+        <td class="text-end small">{{ p.estoque_minimo }}</td>
+        <td>{% if p.saldo_atual <= 0 %}<span class="pilula sla-ESTOURADO">Zerado</span>
+            {% elif p.saldo_atual <= p.estoque_minimo %}<span class="pilula sla-EM_RISCO">Repor</span>
+            {% else %}<span class="pilula sla-NO_PRAZO">OK</span>{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="7" class="vazio"><i class="bi bi-boxes"></i>Nenhum produto encontrado.
+        <div class="mt-2"><a class="btn btn-sm btn-primary" href="{% url 'estoque:produto_novo' %}">Cadastrar produto</a></div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% if pagina.has_other_pages %}
+  <nav class="d-flex gap-2 align-items-center justify-content-end p-3 border-top">
+    {% if pagina.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ busca|urlencode }}&filtro={{ filtro }}&cliente={{ cliente }}&tipo={{ tipo|urlencode }}&pagina={{ pagina.previous_page_number }}"><i class="bi bi-chevron-left"></i></a>{% endif %}
+    <span class="small text-muted">Pagina {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ busca|urlencode }}&filtro={{ filtro }}&cliente={{ cliente }}&tipo={{ tipo|urlencode }}&pagina={{ pagina.next_page_number }}"><i class="bi bi-chevron-right"></i></a>{% endif %}
+  </nav>
+  {% endif %}
+</div>
+{% include "_scanner_modal.html" %}
+{% endblock %}
+{% block scripts %}
+{% include "_scanner_scripts.html" %}
+<script nonce="{{ request.csp_nonce }}">
+  // Ao ler um codigo na busca (camera ou leitor USB), ja pesquisa
+  document.getElementById("busca-q").addEventListener("change", (e) => { if (e.target.value.trim()) e.target.form.submit(); });
+</script>
+{% endblock %}

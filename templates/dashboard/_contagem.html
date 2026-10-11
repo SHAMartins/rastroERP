@@ -1,0 +1,9 @@
+{# Lista simples de contagem. Parametros: titulo, icone, itens (nome/total), vazio #}
+<div class="cartao h-100">
+  <div class="cartao-titulo"><i class="bi {{ icone }} text-primary"></i> {{ titulo }}</div>
+  <ul class="list-unstyled small mb-0">
+    {% for i in itens %}
+      <li class="d-flex justify-content-between py-2 border-bottom"><span>{{ i.nome }}</span><strong>{{ i.total }}</strong></li>
+    {% empty %}<li class="text-muted">{{ vazio }}</li>{% endfor %}
+  </ul>
+</div>

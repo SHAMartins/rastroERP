@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load chamados_tags %}
+{% block title %}{% if cliente %}{{ cliente.nome }}{% else %}Novo cliente{% endif %}{% endblock %}
+{% block titulo_pagina %}{% if cliente %}Cliente{% else %}Novo cliente{% endif %}{% endblock %}
+{% block content %}
+<a class="small text-decoration-none" href="{% url 'cadastros:clientes' %}"><i class="bi bi-arrow-left"></i> Clientes</a>
+<div class="cabecalho-pagina mt-2">
+  <div>
+    <h2>{% if cliente %}{{ cliente.nome }}{% else %}Novo cliente{% endif %}</h2>
+    {% if cliente %}<p>{{ cliente.documento }} · cadastrado em {{ cliente.criado_em|date:"d/m/Y" }}</p>{% endif %}
+  </div>
+  {% if cliente %}<a class="btn btn-outline-primary" href="{% url 'chamados:novo' %}?cliente={{ cliente.pk }}"><i class="bi bi-plus-lg"></i> Nova atividade</a>{% endif %}
+</div>
+
+<div class="row g-3">
+  <div class="{% if cliente %}col-xl-5{% else %}col-xl-7{% endif %}">
+    <form method="post" class="cartao">
+      {% csrf_token %}
+      <div class="cartao-titulo"><i class="bi bi-person-vcard text-primary"></i> Dados do cliente</div>
+      <div class="row g-3">
+        {% include "_campo.html" with campo=form.nome col="col-12" %}
+        {% include "_campo.html" with campo=form.documento col="col-md-6" %}
+        {% include "_campo.html" with campo=form.telefone col="col-md-6" %}
+        {% include "_campo.html" with campo=form.email col="col-12" %}
+        <div class="col-12"><div class="form-check">{{ form.ativo }}<label class="form-check-label" for="{{ form.ativo.id_for_label }}">{{ form.ativo.label }}</label></div></div>
+      </div>
+      <div class="mt-4 d-flex gap-2 justify-content-end">
+        <a class="btn btn-outline-secondary" href="{% url 'cadastros:clientes' %}">{% if pode_editar %}Cancelar{% else %}Voltar{% endif %}</a>
+        {% if pode_editar %}<button class="btn btn-primary"><i class="bi bi-check-lg"></i> Salvar</button>{% endif %}
+      </div>
+    </form>
+  </div>
+
+  {% if cliente %}
+  <div class="col-xl-7">
+    <div class="cartao mb-3">
+      <div class="cartao-titulo justify-content-between">
+        <span><i class="bi bi-stopwatch text-primary"></i> Contrato de SLA</span>
+        {% if perms.chamados.gerenciar_sla %}<a class="btn btn-sm btn-outline-primary" href="{% url 'cadastros:sla_cliente' cliente.pk %}"><i class="bi bi-pencil"></i> Editar prazos</a>{% endif %}
+      </div>
+      {% include "cadastros/_tabela_sla.html" with editavel=False %}
+    </div>
+
+    <div class="cartao cartao-tabela mb-3">
+      <div class="cartao-titulo px-3 pt-3 justify-content-between">
+        <span><i class="bi bi-list-check text-primary"></i> Atividades em aberto</span>
+        <a class="small fw-normal" href="{% url 'chamados:lista' %}?visao=todos&q={{ cliente.nome|urlencode }}">Ver historico</a>
+      </div>
+      <div class="table-responsive">
+      <table class="table tabela-erp">
+        <tbody>
+        {% for c in atividades %}
+          <tr><td class="text-nowrap"><a href="{% url 'chamados:detalhe' c.pk %}">{{ c.numero }}</a></td>
+            <td>{% tipo_badge c %}</td><td class="small">{{ c.titulo|truncatechars:45 }}</td>
+            <td class="text-nowrap">{% sla_badge c %}</td></tr>
+        {% empty %}
+          <tr><td class="vazio py-3">Nenhuma atividade em aberto.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="cartao">
+      <div class="cartao-titulo justify-content-between">
+        <span><i class="bi bi-card-checklist text-primary"></i> Servicos exclusivos deste cliente</span>
+        <a class="small fw-normal" href="{% url 'cadastros:servicos' %}">Gerenciar servicos</a>
+      </div>
+      <ul class="list-unstyled small mb-0">
+        {% for s in servicos %}<li class="py-1 border-bottom">{{ s.nome }}</li>
+        {% empty %}<li class="text-muted">Nenhum. Este cliente usa os servicos gerais.</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

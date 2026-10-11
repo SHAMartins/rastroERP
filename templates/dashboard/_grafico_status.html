@@ -1,0 +1,8 @@
+{# Card com grafico de barras por status. Parametros: titulo, icone, dados, id #}
+<div class="cartao h-100">
+  <div class="cartao-titulo"><i class="bi {{ icone }} text-primary"></i> {{ titulo }}</div>
+  <div style="position: relative; height: {% if dados.itens|length > 5 %}240{% else %}190{% endif %}px">
+    <canvas id="{{ id }}" role="img" aria-label="{{ titulo }}" data-grafico="dados-{{ id }}"></canvas>
+  </div>
+  {% with "dados-"|add:id as dados_id %}{{ dados.grafico|json_script:dados_id }}{% endwith %}
+</div>

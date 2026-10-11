@@ -1,0 +1,8 @@
+<div class="{{ col|default:'col-md-6' }}" id="campo-{{ campo.name }}">
+  <label class="form-label" for="{{ campo.id_for_label }}">
+    {{ campo.label }}{% if campo.field.required %} <span class="text-danger">*</span>{% endif %}
+  </label>
+  {{ campo }}
+  {% if campo.help_text %}<div class="form-text">{{ campo.help_text }}</div>{% endif %}
+  {% for e in campo.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+</div>

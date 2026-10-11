@@ -1,0 +1,4 @@
+# Quebra de linha padrao Linux (o sistema roda em conteiner Linux), mesmo editando no Windows
+* text=auto eol=lf
+*.png binary
+*.jpg binary

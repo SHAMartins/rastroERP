@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+venv/
+media/
+.env.prod
+staticfiles/
+.pytest_cache/
+CLAUDE.md

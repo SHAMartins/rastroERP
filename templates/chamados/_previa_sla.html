@@ -1,0 +1,14 @@
+{% if prioridade %}
+<div class="previa-sla d-flex flex-wrap gap-3 align-items-center">
+  <span>Prioridade calculada: <span class="pilula pr-{{ prioridade }}">{{ prioridade_nome }}</span></span>
+  {% if politica %}
+    <span><i class="bi bi-reply text-primary"></i> Primeira resposta em <strong>{{ politica.horas_resposta|floatformat:"-1" }}h</strong></span>
+    <span><i class="bi bi-flag text-primary"></i> Solucao em <strong>{{ politica.horas_solucao|floatformat:"-1" }}h</strong></span>
+    <span class="text-muted small">({% if politica.cliente %}contrato de {{ politica.cliente }}{% else %}SLA padrao{% endif %})</span>
+  {% elif tem_tipo %}
+    <span class="text-muted">Sem SLA cadastrado para este tipo e prioridade.</span>
+  {% else %}
+    <span class="text-muted">Escolha o tipo para ver os prazos de SLA.</span>
+  {% endif %}
+</div>
+{% endif %}

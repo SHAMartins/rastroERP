@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load chamados_tags %}
+{% block title %}Painel de triagem{% endblock %}
+{% block titulo_pagina %}Painel de triagem{% endblock %}
+{% block content %}
+<div class="cabecalho-pagina">
+  <div>
+    <h2>Triagem</h2>
+    <p>Atividades novas aguardando a primeira resposta, da que vence primeiro para a ultima.</p>
+  </div>
+</div>
+{% include "dashboard/_nav.html" %}
+
+<div class="row g-3 mb-3">
+  <div class="col-sm-6 col-xl-3"><div class="cartao kpi h-100">
+    <span class="kpi-icone tom-azul"><i class="bi bi-inbox"></i></span>
+    <div><div class="kpi-valor">{{ novos|length }}</div><div class="kpi-rotulo">Aguardando triagem<br>{{ sem_responsavel }} sem responsavel</div></div></div></div>
+  <div class="col-sm-6 col-xl-3"><div class="cartao kpi h-100">
+    <span class="kpi-icone tom-vermelho"><i class="bi bi-alarm"></i></span>
+    <div><div class="kpi-valor{% if vencidos %} text-danger{% endif %}">{{ vencidos }}</div><div class="kpi-rotulo">Resposta vencida<br>{{ vence_logo }} vence{{ vence_logo|pluralize:"m" }} em ate 1h</div></div></div></div>
+  <div class="col-sm-6 col-xl-3"><div class="cartao kpi h-100">
+    <span class="kpi-icone tom-verde"><i class="bi bi-reply"></i></span>
+    <div><div class="kpi-valor">{% if resposta_no_prazo is not None %}{{ resposta_no_prazo }}%{% else %}-{% endif %}</div><div class="kpi-rotulo">1a resposta no prazo<br>ultimos 30 dias</div></div></div></div>
+  <div class="col-sm-6 col-xl-3"><div class="cartao kpi h-100">
+    <span class="kpi-icone tom-amarelo"><i class="bi bi-stopwatch"></i></span>
+    <div><div class="kpi-valor">{% if tempo_medio_min is not None %}{{ tempo_medio_min }}min{% else %}-{% endif %}</div><div class="kpi-rotulo">Tempo medio de 1a resposta<br>ultimos 30 dias</div></div></div></div>
+</div>
+
+<div class="cartao cartao-tabela mb-3">
+  <div class="cartao-titulo px-3 pt-3"><i class="bi bi-list-ol text-primary"></i> Fila de triagem</div>
+  <div class="table-responsive">
+  <table class="table tabela-erp">
+    <thead><tr><th>Atividade</th><th>Tipo</th><th>Titulo / cliente</th><th>Prioridade</th><th>Na fila ha</th><th>Responder ate</th><th>Responsavel</th></tr></thead>
+    <tbody>
+    {% for c in novos %}
+      <tr{% if c.resposta_vencida %} class="table-danger"{% elif c.resposta_vence_logo %} class="table-warning"{% endif %}>
+        <td class="text-nowrap"><a href="{% url 'chamados:detalhe' c.pk %}">{{ c.numero }}</a></td>
+        <td>{% tipo_badge c %}</td>
+        <td>{{ c.titulo|truncatechars:50 }}<div class="small text-muted">{{ c.cliente }}{% if c.cliente_final %} / {{ c.cliente_final }}{% endif %}</div></td>
+        <td>{% include "ordens/_prioridade.html" with o=c %}</td>
+        <td class="small text-nowrap">{{ c.na_fila|duracao }}</td>
+        <td class="small text-nowrap">{% if c.prazo_resposta %}{{ c.prazo_resposta|date:"d/m H:i" }}{% if c.resposta_vencida %}<div class="text-danger fw-semibold">vencida</div>{% endif %}{% else %}-{% endif %}</td>
+        <td class="small">{{ c.responsavel|default:"-" }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="7" class="vazio"><i class="bi bi-check2-circle"></i>Fila de triagem vazia.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<div class="cartao cartao-tabela">
+  <div class="cartao-titulo px-3 pt-3 justify-content-between">
+    <span><i class="bi bi-pause-circle text-primary"></i> Pendentes com o cliente (SLA pausado)</span>
+    <a class="small fw-normal" href="{% url 'chamados:lista' %}?status=PENDENTE_CLIENTE">Ver todas</a>
+  </div>
+  <div class="table-responsive">
+  <table class="table tabela-erp">
+    <thead><tr><th>Atividade</th><th>Titulo / cliente</th><th>Pausada desde</th></tr></thead>
+    <tbody>
+    {% for c in pendentes_cliente %}
+      <tr><td><a href="{% url 'chamados:detalhe' c.pk %}">{{ c.numero }}</a></td>
+        <td>{{ c.titulo|truncatechars:60 }}<div class="small text-muted">{{ c.cliente }}</div></td>
+        <td class="small">{{ c.pausado_desde|date:"d/m H:i" }}</td></tr>
+    {% empty %}
+      <tr><td colspan="3" class="vazio py-3">Nenhuma atividade aguardando o cliente.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

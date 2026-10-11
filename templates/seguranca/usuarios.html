@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Usuarios{% endblock %}
+{% block titulo_pagina %}Usuarios{% endblock %}
+{% block content %}
+<div class="cabecalho-pagina">
+  <div>
+    <h2>Usuarios e perfis</h2>
+    <p>Cada usuario tem um perfil, que define o que ele pode fazer. Toda mudanca de perfil vai para o log de seguranca.</p>
+  </div>
+  {% if perms.auth.add_user %}<a class="btn btn-primary" href="{% url 'seguranca:usuario_novo' %}"><i class="bi bi-person-plus"></i> Novo usuario</a>{% endif %}
+</div>
+<div class="cartao cartao-tabela">
+  <div class="table-responsive">
+  <table class="table tabela-erp">
+    <thead><tr><th>Usuario</th><th>Nome</th><th>Perfil</th><th>Situacao</th><th>Ultimo acesso</th></tr></thead>
+    <tbody>
+    {% for u in lista %}
+      <tr>
+        <td>{% if not u.is_superuser or user.is_superuser %}<a href="{% url 'seguranca:usuario' u.pk %}">{{ u.username }}</a>{% else %}{{ u.username }}{% endif %}
+          {% if u.is_superuser %} <span class="pilula sla-ESTOURADO" title="Superusuario: todas as permissoes">super</span>{% endif %}</td>
+        <td>{{ u.get_full_name|default:"-" }}</td>
+        <td>{% if u.perfil %}<span class="pilula pr-MEDIA">{{ u.perfil }}</span>{% else %}<span class="pilula sla-SEM_SLA">Sem perfil</span>{% endif %}</td>
+        <td>{% if u.is_active %}<span class="pilula sla-NO_PRAZO">Ativo</span>{% else %}<span class="pilula st-PAUSADA">Inativo</span>{% endif %}</td>
+        <td class="small">{{ u.last_login|date:"d/m/Y H:i"|default:"nunca" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

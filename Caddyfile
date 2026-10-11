@@ -1,0 +1,22 @@
+# Proxy HTTPS do ERP. HTTP (porta 80) e redirecionado para HTTPS automaticamente.
+# CADDY_TLS=internal  -> certificado da CA local do Caddy (rede interna / testes; instale a CA nos aparelhos)
+# CADDY_TLS=seu@email -> certificado Let's Encrypt (precisa de dominio publico apontando para o servidor)
+{$DOMINIO} {
+	tls {$CADDY_TLS}
+	encode gzip
+
+	request_body {
+		max_size 15MB
+	}
+
+	handle_path /static/* {
+		root * /srv/static
+		file_server
+	}
+
+	reverse_proxy web:8000
+
+	header {
+		-Server
+	}
+}

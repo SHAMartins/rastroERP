@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{% if produto %}{{ produto.nome }}{% else %}Novo produto{% endif %}{% endblock %}
+{% block titulo_pagina %}{% if produto %}Produto{% else %}Novo produto{% endif %}{% endblock %}
+{% block content %}
+<a class="small text-decoration-none" href="{% url 'estoque:produtos' %}"><i class="bi bi-arrow-left"></i> Produtos</a>
+<div class="cabecalho-pagina mt-2">
+  <div>
+    <h2>{% if produto %}{{ produto.codigo }} - {{ produto.nome }}{% else %}Novo produto{% endif %}</h2>
+    {% if produto %}<p>{% if produto.tipo %}{{ produto.tipo }}{% if produto.modelo %} · {{ produto.modelo }}{% endif %} · {% endif %}{% if produto.cliente %}Material de {{ produto.cliente }}{% else %}Estoque da empresa{% endif %}{% if produto.controla_serie %} · <i class="bi bi-upc"></i> controla no de serie{% endif %}{% if not produto.ativo %} · inativo{% endif %}</p>{% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="{% if produto %}col-xl-4{% else %}col-xl-6{% endif %}">
+    <form method="post" class="cartao">
+      {% csrf_token %}
+      <div class="cartao-titulo"><i class="bi bi-box-seam text-primary"></i> Cadastro</div>
+      <div class="row g-3">
+        {% include "_campo_scanner.html" with campo=form.codigo col="col-12" %}
+        {% include "_campo.html" with campo=form.nome col="col-12" %}
+        {% include "_campo.html" with campo=form.tipo col="col-md-6" %}
+        {% include "_campo.html" with campo=form.modelo col="col-md-6" %}
+        <datalist id="tipos-produto">{% for t in tipos %}<option value="{{ t }}">{% endfor %}</datalist>
+        {% include "_campo.html" with campo=form.unidade col="col-md-5" %}
+        {% include "_campo.html" with campo=form.estoque_minimo col="col-md-7" %}
+        {% include "_campo.html" with campo=form.cliente col="col-12" %}
+        <div class="col-12">
+          <div class="form-check">{{ form.controla_serie }}<label class="form-check-label" for="{{ form.controla_serie.id_for_label }}">{{ form.controla_serie.label }}</label></div>
+          <div class="form-text ms-4">{{ form.controla_serie.help_text }}</div>
+          {% for e in form.controla_serie.errors %}<div class="text-danger small ms-4">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="col-12"><div class="form-check">{{ form.ativo }}<label class="form-check-label" for="{{ form.ativo.id_for_label }}">{{ form.ativo.label }}</label></div></div>
+      </div>
+      {% if not produto %}<p class="small text-muted mt-3 mb-0">O saldo inicial e lancado depois, como uma entrada.</p>{% endif %}
+      <div class="mt-4 d-flex gap-2 justify-content-end">
+        <a class="btn btn-outline-secondary" href="{% url 'estoque:produtos' %}">{% if pode_editar %}Cancelar{% else %}Voltar{% endif %}</a>
+        {% if pode_editar %}<button class="btn btn-primary"><i class="bi bi-check-lg"></i> Salvar</button>{% endif %}
+      </div>
+    </form>
+  </div>
+  {% if produto %}
+  <div class="col-xl-8" id="painel-produto">{% include "estoque/_painel_produto.html" %}</div>
+  {% endif %}
+</div>
+{% include "_scanner_modal.html" %}
+{% endblock %}
+{% block scripts %}{% include "_scanner_scripts.html" %}{% endblock %}

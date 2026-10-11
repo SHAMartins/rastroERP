@@ -1,0 +1,13 @@
+{# Igual a _campo.html, com botao de camera ao lado (campo continua aceitando digitacao e leitor USB) #}
+<div class="{{ col|default:'col-md-6' }}" id="campo-{{ campo.name }}">
+  <label class="form-label" for="{{ campo.id_for_label }}">
+    {{ campo.label }}{% if campo.field.required %} <span class="text-danger">*</span>{% endif %}
+  </label>
+  <div class="input-group">
+    {{ campo }}
+    <button type="button" class="btn btn-outline-secondary" data-scanner-alvo="#{{ campo.id_for_label }}"
+            title="Ler com a camera" aria-label="Ler {{ campo.label|lower }} com a camera"><i class="bi bi-upc-scan"></i></button>
+  </div>
+  {% if campo.help_text %}<div class="form-text">{{ campo.help_text }}</div>{% endif %}
+  {% for e in campo.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+</div>

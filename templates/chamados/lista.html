@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load chamados_tags %}
+{% block title %}Atividades{% endblock %}
+{% block titulo_pagina %}Atividades{% endblock %}
+{% block content %}
+<div class="cabecalho-pagina">
+  <div>
+    <h2>{% if minhas %}Minhas OSs{% elif visao == "abertos" and not status %}Fila de atividades{% else %}Atividades{% endif %}</h2>
+    <p>{{ pagina.paginator.count }} atividade{{ pagina.paginator.count|pluralize }}{% if visao == "abertos" and not status %} em aberto, ordenadas pelo prazo de SLA{% endif %}</p>
+  </div>
+  </div>
+
+<ul class="nav nav-pills mb-3 gap-1">
+  <li class="nav-item"><a class="nav-link{% if visao == 'abertos' and not status and not minhas and not tipo %} active{% endif %}" href="?visao=abertos">Em aberto</a></li>
+  <li class="nav-item"><a class="nav-link{% if tipo == 'MANUTENCAO' %} active{% endif %}" href="?tipo=MANUTENCAO">Manutencao</a></li>
+  <li class="nav-item"><a class="nav-link{% if tipo == 'INSTALACAO' %} active{% endif %}" href="?tipo=INSTALACAO">Instalacao</a></li>
+  <li class="nav-item"><a class="nav-link{% if minhas %} active{% endif %}" href="?minhas=1">Minhas OSs</a></li>
+  <li class="nav-item"><a class="nav-link{% if status == 'NOVO' %} active{% endif %}" href="?status=NOVO">Aguardando triagem</a></li>
+  <li class="nav-item"><a class="nav-link{% if status == 'PENDENTE_CLIENTE' %} active{% endif %}" href="?status=PENDENTE_CLIENTE">Pendente cliente</a></li>
+  <li class="nav-item"><a class="nav-link{% if visao == 'todos' and not status and not tipo %} active{% endif %}" href="?visao=todos">Todas</a></li>
+</ul>
+
+<div class="cartao cartao-tabela">
+  <form class="row g-2 p-3 border-bottom" method="get">
+    <input type="hidden" name="visao" value="{{ visao }}">{% if minhas %}<input type="hidden" name="minhas" value="1">{% endif %}
+    <div class="col-md-5">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0" style="border-radius:10px 0 0 10px"><i class="bi bi-search text-muted"></i></span>
+        <input class="form-control border-start-0" name="q" value="{{ busca }}" placeholder="Numero da atividade ou OS, titulo, cliente, circuito">
+      </div>
+    </div>
+    <div class="col-md-3"><select class="form-select" name="tipo" data-autoenvio>
+      <option value="">Todos os tipos</option>
+      {% for valor, nome in tipo_choices %}<option value="{{ valor }}"{% if valor == tipo %} selected{% endif %}>{{ nome }}</option>{% endfor %}
+    </select></div>
+    <div class="col-md-2"><select class="form-select" name="status" data-autoenvio>
+      <option value="">Status</option>
+      {% for valor, nome in status_choices %}<option value="{{ valor }}"{% if valor == status %} selected{% endif %}>{{ nome }}</option>{% endfor %}
+    </select></div>
+    <div class="col-md-2"><button class="btn btn-outline-primary w-100">Filtrar</button></div>
+  </form>
+  <div class="table-responsive">
+  <table class="table tabela-erp">
+    <thead><tr><th>Atividade</th><th>Tipo</th><th>Titulo</th><th>Cliente / local</th><th>Status</th><th>Execucao</th><th>SLA</th></tr></thead>
+    <tbody>
+    {% for c in pagina %}
+      <tr>
+        <td class="text-nowrap"><a href="{% url 'chamados:detalhe' c.pk %}">{{ c.numero }}</a>
+          <div class="small text-muted">{{ c.aberto_em|date:"d/m H:i" }}</div></td>
+        <td>{% tipo_badge c %}</td>
+        <td>{{ c.titulo }}{% if c.ativo %}<div class="small text-muted"><i class="bi bi-hdd-network"></i> {{ c.ativo }}</div>{% endif %}</td>
+        <td>{{ c.cliente }}<div class="small text-muted">{{ c.cliente_final|default:c.endereco|truncatechars:40 }}</div></td>
+        <td>{% include "ordens/_status.html" with o=c %}<div class="mt-1">{% include "ordens/_prioridade.html" with o=c %}</div></td>
+        <td class="small">{% for o in c.ordens.all %}
+          <div class="text-nowrap mb-1"><a class="fw-normal" href="{% url 'ordens:detalhe' o.pk %}">OS {{ o.numero }}</a>
+            {% include "ordens/_status.html" %}<div class="text-muted">{{ o.responsavel|default:"sem tecnico" }}{% if o.data_agendada %} · {{ o.data_agendada|date:"d/m H:i" }}{% endif %}</div></div>
+        {% empty %}<span class="text-muted">Sem OS</span>{% endfor %}</td>
+        <td class="text-nowrap">{% sla_badge c %}<div class="small text-muted mt-1">{% sla_restante c %}</div></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="7" class="vazio"><i class="bi bi-inbox"></i>Nenhuma atividade encontrada.
+        <div class="mt-2"><a class="btn btn-sm btn-primary" href="{% url 'chamados:novo' %}">Nova atividade</a></div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% if pagina.has_other_pages %}
+  <nav class="d-flex gap-2 align-items-center justify-content-end p-3 border-top">
+    {% if pagina.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?visao={{ visao }}{% if minhas %}&minhas=1{% endif %}&q={{ busca|urlencode }}&tipo={{ tipo }}&status={{ status }}&pagina={{ pagina.previous_page_number }}"><i class="bi bi-chevron-left"></i></a>{% endif %}
+    <span class="small text-muted">Pagina {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?visao={{ visao }}{% if minhas %}&minhas=1{% endif %}&q={{ busca|urlencode }}&tipo={{ tipo }}&status={{ status }}&pagina={{ pagina.next_page_number }}"><i class="bi bi-chevron-right"></i></a>{% endif %}
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

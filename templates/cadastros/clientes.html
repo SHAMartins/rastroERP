@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Clientes{% endblock %}
+{% block titulo_pagina %}Clientes{% endblock %}
+{% block content %}
+<div class="cabecalho-pagina">
+  <div>
+    <h2>Clientes</h2>
+    <p>Contratantes dos servicos. Cada cliente pode ter o seu contrato de SLA.</p>
+  </div>
+  {% if perms.clientes.add_cliente %}<a class="btn btn-primary" href="{% url 'cadastros:cliente_novo' %}"><i class="bi bi-person-plus"></i> Novo cliente</a>{% endif %}
+</div>
+
+<div class="cartao cartao-tabela">
+  <form class="row g-2 p-3 border-bottom" method="get">
+    <div class="col-md-7">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0" style="border-radius:10px 0 0 10px"><i class="bi bi-search text-muted"></i></span>
+        <input class="form-control border-start-0" name="q" value="{{ busca }}" placeholder="Nome, CPF/CNPJ ou e-mail">
+      </div>
+    </div>
+    <div class="col-md-3"><select class="form-select" name="situacao" data-autoenvio>
+      <option value="ativos"{% if situacao == "ativos" %} selected{% endif %}>Ativos</option>
+      <option value="inativos"{% if situacao == "inativos" %} selected{% endif %}>Inativos</option>
+      <option value="todos"{% if situacao == "todos" %} selected{% endif %}>Todos</option>
+    </select></div>
+    <div class="col-md-2"><button class="btn btn-outline-primary w-100">Filtrar</button></div>
+  </form>
+  <div class="table-responsive">
+  <table class="table tabela-erp">
+    <thead><tr><th>Cliente</th><th>CPF/CNPJ</th><th>Contato</th><th>SLA</th><th>Atividades em aberto</th></tr></thead>
+    <tbody>
+    {% for c in pagina %}
+      <tr>
+        <td><a href="{% url 'cadastros:cliente' c.pk %}">{{ c.nome }}</a>{% if not c.ativo %} <span class="pilula st-PAUSADA">Inativo</span>{% endif %}</td>
+        <td class="small text-nowrap">{{ c.documento }}</td>
+        <td class="small">{{ c.email|default:"" }}{% if c.email and c.telefone %}<br>{% endif %}{{ c.telefone|default:"" }}</td>
+        <td>{% if c.contrato %}<span class="pilula sla-NO_PRAZO">Contrato proprio</span>{% else %}<span class="pilula sla-SEM_SLA">Padrao</span>{% endif %}</td>
+        <td>{% if c.abertas %}<a href="{% url 'chamados:lista' %}?q={{ c.nome|urlencode }}">{{ c.abertas }}</a>{% else %}<span class="text-muted">0</span>{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5" class="vazio"><i class="bi bi-people"></i>Nenhum cliente encontrado.
+        <div class="mt-2"><a class="btn btn-sm btn-primary" href="{% url 'cadastros:cliente_novo' %}">Cadastrar cliente</a></div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% if pagina.has_other_pages %}
+  <nav class="d-flex gap-2 align-items-center justify-content-end p-3 border-top">
+    {% if pagina.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ busca|urlencode }}&situacao={{ situacao }}&pagina={{ pagina.previous_page_number }}"><i class="bi bi-chevron-left"></i></a>{% endif %}
+    <span class="small text-muted">Pagina {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ busca|urlencode }}&situacao={{ situacao }}&pagina={{ pagina.next_page_number }}"><i class="bi bi-chevron-right"></i></a>{% endif %}
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

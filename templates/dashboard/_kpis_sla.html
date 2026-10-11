@@ -1,0 +1,16 @@
+{# Indicadores de SLA. Parametros: ind, link (lista filtrada) #}
+<div class="col-sm-6 col-xl-3"><a class="cartao kpi text-reset text-decoration-none h-100" href="{{ link }}">
+  <span class="kpi-icone tom-azul"><i class="bi bi-list-check"></i></span>
+  <div><div class="kpi-valor">{{ ind.abertos }}</div><div class="kpi-rotulo">Em aberto{% if ind.pausados %}<br>{{ ind.pausados }} pendente{{ ind.pausados|pluralize }} cliente{% endif %}</div></div></a></div>
+<div class="col-sm-6 col-xl-3"><a class="cartao kpi text-reset text-decoration-none h-100" href="{{ link }}">
+  <span class="kpi-icone tom-vermelho"><i class="bi bi-alarm"></i></span>
+  <div><div class="kpi-valor{% if ind.estourados %} text-danger{% endif %}">{{ ind.estourados }}</div>
+    <div class="kpi-rotulo">SLA estourado<br>{{ ind.em_risco }} em risco (80% do prazo)</div></div></a></div>
+<div class="col-sm-6 col-xl-3"><div class="cartao kpi h-100">
+  <span class="kpi-icone tom-verde"><i class="bi bi-graph-up-arrow"></i></span>
+  <div><div class="kpi-valor">{% if ind.cumprimento is not None %}{{ ind.cumprimento }}%{% else %}-{% endif %}</div>
+    <div class="kpi-rotulo">SLA cumprido (30 dias)<br>{{ ind.resolvidos }} resolvida{{ ind.resolvidos|pluralize }}</div></div></div></div>
+<div class="col-sm-6 col-xl-3"><div class="cartao kpi h-100">
+  <span class="kpi-icone tom-amarelo"><i class="bi bi-hourglass-split"></i></span>
+  <div><div class="kpi-valor">{% if ind.mttr_horas is not None %}{{ ind.mttr_horas }}h{% else %}-{% endif %}</div>
+    <div class="kpi-rotulo">MTTR (30 dias)<br>tempo medio de resolucao</div></div></div></div>

@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% load chamados_tags %}
+{% block title %}{{ chamado.numero }}{% endblock %}
+{% block titulo_pagina %}Atividade {{ chamado.numero }}{% endblock %}
+{% block content %}
+{% with c=chamado %}
+<a class="small text-decoration-none" href="{% url 'chamados:lista' %}"><i class="bi bi-arrow-left"></i> Atividades</a>
+<div class="cabecalho-pagina mt-2">
+  <div>
+    <h2>{{ c.titulo }}</h2>
+    <div class="d-flex flex-wrap gap-2 mt-2 align-items-center">
+      <span class="text-muted small">{{ c.numero }}</span>
+      {% tipo_badge c %} {% include "ordens/_status.html" with o=c %} {% include "ordens/_prioridade.html" with o=c %}
+    </div>
+  </div>
+  {% if form_os %}<a class="btn btn-primary" href="#gerar-os" data-bs-toggle="collapse"><i class="bi bi-tools"></i> Gerar OS</a>{% endif %}
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-8">
+    {# ---------- SLA ---------- #}
+    <div class="cartao mb-3">
+      <div class="cartao-titulo justify-content-between">
+        <span><i class="bi bi-stopwatch text-primary"></i> SLA</span>{% sla_badge c %}
+      </div>
+      {% if c.prazo_solucao %}
+      <div class="row g-4">
+        <div class="col-md-5">
+          <div class="small text-muted">Primeira resposta</div>
+          <div class="fw-semibold">ate {{ c.prazo_resposta|date:"d/m/Y H:i" }}</div>
+          <div class="small mt-1">
+            {% if c.primeira_resposta_em %}
+              {% if c.resposta_no_prazo %}<span class="text-success"><i class="bi bi-check-circle"></i>{% else %}<span class="text-danger"><i class="bi bi-x-circle"></i>{% endif %}
+              Respondido em {{ c.primeira_resposta_em|date:"d/m H:i" }}</span>
+            {% elif c.resposta_no_prazo is False %}<span class="text-danger"><i class="bi bi-x-circle"></i> Prazo de resposta vencido</span>
+            {% else %}<span class="text-muted"><i class="bi bi-hourglass-split"></i> Aguardando triagem</span>{% endif %}
+          </div>
+        </div>
+        <div class="col-md-7">
+          <div class="d-flex justify-content-between">
+            <div><div class="small text-muted">Solucao</div>
+              <div class="fw-semibold">ate {{ c.prazo_solucao_efetivo|date:"d/m/Y H:i" }}</div></div>
+            <div class="text-end small text-muted align-self-end">{% sla_restante c %}</div>
+          </div>
+          <div class="barra-sla {{ c.situacao_sla }} mt-2"><span style="width: {{ c.percentual_sla }}%"></span></div>
+          <div class="small text-muted mt-1">{{ c.percentual_sla }}% do prazo consumido
+            {% if c.tempo_pausado or c.pausado_desde %} · pausado {{ c.tempo_pausado|duracao }}{% if c.pausado_desde %} + pausa atual{% endif %} (pendente cliente){% endif %}</div>
+        </div>
+      </div>
+      {% else %}
+        <p class="text-muted mb-0 small">Nenhuma politica de SLA cadastrada para este cliente, tipo e prioridade.</p>
+      {% endif %}
+    </div>
+
+    {# ---------- Campos especificos do tipo ---------- #}
+    <div class="cartao mb-3">
+      <div class="cartao-titulo"><i class="bi bi-card-list text-primary"></i> Detalhes - {{ c.get_tipo_display }}</div>
+      {% if detalhes %}
+      <dl class="row dados mb-0">
+        {% for campo, valor in detalhes %}
+          <div class="{% if campo.largura == 'col-12' %}col-12{% else %}col-md-6{% endif %}">
+            <dt>{{ campo.rotulo }}</dt><dd style="white-space: pre-line">{{ valor }}</dd>
+          </div>
+        {% endfor %}
+      </dl>
+      {% else %}<p class="text-muted small mb-0">Nenhum detalhe informado.</p>{% endif %}
+    </div>
+
+    {# ---------- Execucao: OSs dentro da atividade ---------- #}
+    <div class="cartao mb-3" id="execucao">
+      <div class="cartao-titulo justify-content-between">
+        <span><i class="bi bi-tools text-primary"></i> Execucao (ordens de servico)</span>
+        {% if form_os and ordens %}<a class="small fw-normal" href="#gerar-os" data-bs-toggle="collapse"><i class="bi bi-plus-lg"></i> Nova OS</a>{% endif %}
+      </div>
+
+      {% for o in ordens %}
+        <div class="os-bloco{% if o.encerrada %} encerrada{% endif %}" id="os-{{ o.pk }}">
+          <div class="d-flex flex-wrap justify-content-between gap-2 align-items-start">
+            <div>
+              <div class="fw-semibold">OS {{ o.numero }} - {{ o.titulo }}</div>
+              <div class="small text-muted mt-1 d-flex flex-wrap gap-3 align-items-center">
+                <span><i class="bi bi-person"></i> {{ o.responsavel|default:"sem tecnico" }}</span>
+                <span><i class="bi bi-calendar-event"></i> {{ o.data_agendada|date:"d/m/Y H:i"|default:"sem agendamento" }}</span>
+                {% if o.servico %}<span><i class="bi bi-card-checklist"></i> {{ o.servico }}</span>{% endif %}
+                {% include "ordens/_prioridade.html" %}
+              </div>
+            </div>
+            {% if o.pode_operar %}
+            <form method="post" action="{% url 'ordens:status' o.pk %}" class="d-flex gap-2">
+              {% csrf_token %}
+              {{ o.form_status.status }}
+              <button class="btn btn-sm btn-outline-primary text-nowrap">Atualizar</button>
+            </form>
+            {% else %}{% include "ordens/_status.html" %}{% endif %}
+          </div>
+          {% if o.descricao %}<div class="small mt-2" style="white-space: pre-line"><span class="text-muted">Instrucoes:</span> {{ o.descricao }}</div>{% endif %}
+
+          <div class="mt-3">
+            <div class="small fw-semibold mb-1"><i class="bi bi-box-seam"></i> Materiais</div>
+            {% for m in o.materiais %}
+              <div class="small d-flex justify-content-between border-bottom py-1">
+                <span><strong>{{ m.qtd_usada }} {{ m.produto.unidade }}</strong> de {{ m.produto.nome }}
+                  {% for i in m.itens_saida.all %}{% if forloop.first %}<span class="text-muted">· SN {% endif %}{{ i.numero_serie }}{% if not forloop.last %}, {% else %}</span>{% endif %}{% endfor %}</span>
+                <span class="text-muted">{{ m.usuario|default:"" }} - {{ m.criado_em|date:"d/m H:i" }}</span></div>
+            {% empty %}<div class="small text-muted">Nenhum material lancado.</div>{% endfor %}
+            {% if o.form_material and o.pode_operar %}
+              <form method="post" action="{% url 'ordens:material' o.pk %}" class="row g-2 mt-1">
+                {% csrf_token %}
+                <div class="col-sm-6">{{ o.form_material.produto }}</div>
+                <div class="col-4 col-sm-2">{{ o.form_material.quantidade }}</div>
+                <div class="col-8 col-sm-4"><div class="input-group">{{ o.form_material.numeros_serie }}
+                  <button type="button" class="btn btn-outline-secondary" data-scanner-alvo="#{{ o.form_material.numeros_serie.id_for_label }}" title="Ler no de serie com a camera" aria-label="Ler numero de serie com a camera"><i class="bi bi-upc-scan"></i></button></div></div>
+                <div class="col-12 d-flex justify-content-between align-items-center">
+                  <span class="small text-muted">Equipamento com no de serie: informe a serie (a quantidade sai da lista).</span>
+                  <button class="btn btn-sm btn-outline-primary"><i class="bi bi-box-arrow-up"></i> Usar material</button></div>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      {% empty %}
+        <p class="small text-muted">Nenhuma OS ainda. Depois da triagem, gere a OS para a execucao em campo.</p>
+      {% endfor %}
+
+      {% if form_os %}
+      <div class="collapse{% if not ordens %} show{% endif %}" id="gerar-os">
+        <form method="post" action="{% url 'chamados:gerar_os' c.pk %}" class="row g-3 p-3 rounded-3 mt-1" style="background:#f8fafc">
+          {% csrf_token %}
+          <div class="col-12 fw-semibold small"><i class="bi bi-plus-circle text-primary"></i> Nova ordem de servico</div>
+          {% include "_campo.html" with campo=form_os.titulo col="col-md-8" %}
+          {% include "_campo.html" with campo=form_os.prioridade col="col-md-4" %}
+          {% include "_campo.html" with campo=form_os.descricao col="col-12" %}
+          {% include "_campo.html" with campo=form_os.servico col="col-md-4" %}
+          {% include "_campo.html" with campo=form_os.responsavel col="col-md-4" %}
+          {% include "_campo.html" with campo=form_os.data_agendada col="col-md-4" %}
+          <div class="col-12 text-end"><button class="btn btn-primary"><i class="bi bi-check-lg"></i> Gerar OS</button></div>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+
+    {# ---------- Linha do tempo ---------- #}
+    <div class="cartao">
+      <div class="cartao-titulo"><i class="bi bi-clock-history text-primary"></i> Linha do tempo</div>
+      <form method="post" action="{% url 'chamados:comentar' c.pk %}" class="mb-4">
+        {% csrf_token %}
+        {{ form_comentario.texto }}
+        <div class="text-end"><button class="btn btn-sm btn-primary mt-2"><i class="bi bi-send"></i> Comentar</button></div>
+      </form>
+      <ul class="timeline">
+        {% for i in linha_do_tempo %}
+          <li>
+            {% if i.tipo == "comentario" %}
+              <span class="marcador tom-azul"><i class="bi bi-chat-left-text"></i></span>
+              <div class="meta"><strong class="text-body">{{ i.usuario|default:"sistema" }}</strong> comentou{% if i.os %} na <span class="pilula pr-BAIXA">OS {{ i.os }}</span>{% endif %} - {{ i.data|date:"d/m/Y H:i" }}</div>
+              <div class="bolha">{{ i.texto }}</div>
+            {% else %}
+              <span class="marcador {% if i.tipo == 'criacao' %}tom-verde{% elif i.tipo == 'os' or i.tipo == 'os_criacao' or i.tipo == 'os_material' %}tom-amarelo{% elif i.tipo == 'status' or i.tipo == 'os_status' %}tom-azul{% else %}tom-cinza{% endif %}">
+                <i class="bi {% if i.tipo == 'criacao' %}bi-flag{% elif i.tipo == 'os' or i.tipo == 'os_criacao' %}bi-tools{% elif i.tipo == 'os_material' %}bi-box-seam{% elif i.tipo == 'status' or i.tipo == 'os_status' %}bi-arrow-repeat{% else %}bi-pencil{% endif %}"></i></span>
+              <div class="meta"><strong class="text-body">{{ i.usuario|default:"sistema" }}</strong>{% if i.os %} na <span class="pilula pr-BAIXA">OS {{ i.os }}</span>{% endif %} - {{ i.data|date:"d/m/Y H:i" }}</div>
+              <div class="small mt-1"><strong>{{ i.campo }}:</strong>
+                {% if i.antes %}<span class="text-muted text-decoration-line-through">{{ i.antes|truncatechars:80 }}</span> <i class="bi bi-arrow-right"></i> {% endif %}{{ i.depois|default:"(vazio)"|truncatechars:200 }}</div>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    {# ---------- Status / encerramento ---------- #}
+    <div class="cartao mb-3">
+      <div class="cartao-titulo"><i class="bi bi-arrow-repeat text-primary"></i> Andamento</div>
+      {% if c.status == "RESOLVIDO" %}
+        <div class="alert alert-success small">
+          <strong>{{ c.get_categoria_encerramento_display }}</strong>{% if c.causa %} · Causa: {{ c.causa }}{% endif %}
+          <div class="mt-1" style="white-space: pre-line">{{ c.nota_resolucao }}</div>
+        </div>
+      {% endif %}
+      {% if perms.chamados.triar_chamado %}
+      <form method="post" action="{% url 'chamados:status' c.pk %}" id="form-status">
+        {% csrf_token %}
+        {{ form_status.status }}
+        <div id="campos-resolucao" class="mt-3" hidden>
+          <div class="small text-muted mb-2">O encerramento alimenta os indicadores: preencha a causa e a categoria.</div>
+          <label class="form-label" for="id_nota_resolucao">Nota de resolucao <span class="text-danger">*</span></label>
+          {{ form_status.nota_resolucao }}
+          <label class="form-label mt-2" for="id_categoria_encerramento">Categoria de encerramento <span class="text-danger">*</span></label>
+          {{ form_status.categoria_encerramento }}
+          <label class="form-label mt-2" for="id_causa">Causa</label>
+          {{ form_status.causa }}
+        </div>
+        <button class="btn btn-outline-primary w-100 mt-3">Atualizar status</button>
+      </form>
+      {% else %}
+        <p class="small text-muted mb-0">Status atual: {% include "ordens/_status.html" with o=c %}<br>
+          A triagem e o encerramento sao feitos pela Coordenacao.</p>
+      {% endif %}
+    </div>
+
+    {# ---------- Dados ---------- #}
+    <div class="cartao mb-3">
+      <div class="cartao-titulo"><i class="bi bi-info-circle text-primary"></i> Dados da atividade</div>
+      <dl class="row dados mb-0">
+        <dt class="col-5">Cliente</dt><dd class="col-7">{{ c.cliente }}</dd>
+        <dt class="col-5">Cliente final</dt><dd class="col-7">{{ c.cliente_final|default:"-" }}</dd>
+        <dt class="col-5">Endereco</dt><dd class="col-7">{{ c.endereco }}
+          {% if c.coordenadas %}<br><a href="https://www.google.com/maps?q={{ c.coordenadas|urlencode }}" target="_blank" rel="noopener"><i class="bi bi-geo-alt"></i> Ver no mapa</a>{% endif %}</dd>
+        <dt class="col-5">Contato no local</dt><dd class="col-7">{{ c.contato_local|default:"-" }}</dd>
+        <dt class="col-5">Janela de acesso</dt><dd class="col-7">{{ c.janela_acesso|default:"-" }}</dd>
+        <dt class="col-5">Ativo / circuito</dt><dd class="col-7">{{ c.ativo|default:"-" }}</dd>
+        <dt class="col-5">Solicitante</dt><dd class="col-7">{{ c.solicitante_nome }}{% if c.solicitante_contato %}<br><span class="small text-muted">{{ c.solicitante_contato }}</span>{% endif %}</dd>
+        <dt class="col-5">Impacto</dt><dd class="col-7">{{ c.get_impacto_display }}</dd>
+        <dt class="col-5">Urgencia</dt><dd class="col-7">{{ c.get_urgencia_display }}</dd>
+        <dt class="col-5">Triagem</dt><dd class="col-7">{{ c.responsavel|default:"-" }}</dd>
+        <dt class="col-5">Aberto</dt><dd class="col-7">{{ c.aberto_em|date:"d/m/Y H:i" }}{% if c.criado_por %} por {{ c.criado_por }}{% endif %}</dd>
+      </dl>
+    </div>
+
+    {# ---------- Anexos ---------- #}
+    <div class="cartao">
+      <div class="cartao-titulo"><i class="bi bi-paperclip text-primary"></i> Anexos</div>
+      <ul class="list-unstyled small mb-3">
+        {% for a in anexos %}
+          <li class="py-2 border-bottom"><a href="{{ a.url_download }}" target="_blank" rel="noopener"><i class="bi bi-file-earmark"></i> {{ a.descricao|default:a.nome_arquivo }}</a>
+            <div class="text-muted">{{ a.enviado_por|default:"" }} - {{ a.enviado_em|date:"d/m H:i" }}</div></li>
+        {% empty %}<li class="text-muted">Nenhum anexo. Fotos e laudos ajudam na triagem.</li>{% endfor %}
+      </ul>
+      <form method="post" action="{% url 'chamados:anexar' c.pk %}" enctype="multipart/form-data" class="d-grid gap-2">
+        {% csrf_token %}
+        {{ form_anexo.arquivo }}
+        {{ form_anexo.descricao }}
+        <div class="form-text">{{ form_anexo.arquivo.help_text }}</div>
+        <button class="btn btn-sm btn-outline-primary"><i class="bi bi-upload"></i> Enviar anexo</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endwith %}
+{% include "_scanner_modal.html" %}
+{% endblock %}
+
+{% block scripts %}
+{% include "_scanner_scripts.html" %}
+<script nonce="{{ request.csp_nonce }}">
+  // Campos de encerramento so aparecem quando o status escolhido e "Resolvido"
+  (function () {
+    const status = document.querySelector("#form-status [name=status]");
+    const campos = document.getElementById("campos-resolucao");
+    if (!status) return;
+    const atualizar = () => { campos.hidden = status.value !== "RESOLVIDO"; };
+    status.addEventListener("change", atualizar);
+    atualizar();
+  })();
+</script>
+{% endblock %}

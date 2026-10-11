@@ -1,0 +1,9 @@
+{% if form.campos_tipo %}
+  <div class="row g-3">
+    {% for definicao, campo in form.campos_tipo %}
+      {% include "_campo.html" with campo=campo col=definicao.largura %}
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="text-muted small mb-0"><i class="bi bi-arrow-up"></i> Escolha o tipo da atividade para ver os campos.</p>
+{% endif %}

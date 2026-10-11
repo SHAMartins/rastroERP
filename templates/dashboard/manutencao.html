@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Painel de manutencao{% endblock %}
+{% block titulo_pagina %}Painel de manutencao{% endblock %}
+{% block content %}
+<div class="cabecalho-pagina">
+  <div>
+    <h2><i class="bi bi-wrench-adjustable text-warning"></i> Manutencao</h2>
+    <p>Falhas, reparos e rotinas programadas: andamento, SLA e onde a manutencao mais se concentra.</p>
+  </div>
+</div>
+{% include "dashboard/_nav.html" %}
+
+<div class="row g-3 mb-3">
+  {% url 'chamados:lista' as base %}{% with link=base|add:"?tipo=MANUTENCAO" %}{% include "dashboard/_kpis_sla.html" with ind=ind link=link %}{% endwith %}
+</div>
+
+{% if seguranca %}
+<div class="alert alert-danger d-flex gap-2"><i class="bi bi-shield-exclamation"></i>
+  <div><strong>{{ seguranca }} manutenc{{ seguranca|pluralize:"ao,oes" }} em aberto com risco a seguranca das pessoas.</strong></div></div>
+{% endif %}
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-6">{% include "dashboard/_grafico_status.html" with titulo="Atividades por status" icone="bi-headset" dados=status_chamados id="g-atividades" %}</div>
+  <div class="col-lg-6">{% include "dashboard/_grafico_status.html" with titulo="Ordens de servico por status" icone="bi-tools" dados=status_os id="g-os" %}</div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4">{% include "dashboard/_contagem.html" with titulo="Em aberto: quem esta afetado" icone="bi-people" itens=afetados vazio="-" %}</div>
+  <div class="col-md-4">
+    <div class="cartao h-100">
+      <div class="cartao-titulo"><i class="bi bi-hdd-network text-primary"></i> Ativos com mais manutencoes (90 dias)</div>
+      <ul class="list-unstyled small mb-0">
+        {% for a in top_ativos %}<li class="d-flex justify-content-between py-2 border-bottom">
+          <a class="text-reset" href="{% url 'chamados:lista' %}?visao=todos&q={{ a.ativo|urlencode }}">{{ a.ativo }}</a><strong>{{ a.total }}</strong></li>
+        {% empty %}<li class="text-muted">Sem dados ainda.</li>{% endfor %}
+      </ul>
+      <div class="small text-muted mt-2">Ativo que se repete muito e candidato a substituicao.</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="cartao h-100">
+      <div class="cartao-titulo"><i class="bi bi-geo-alt text-primary"></i> Locais com mais manutencoes (90 dias)</div>
+      <ul class="list-unstyled small mb-0">
+        {% for l in top_locais %}<li class="d-flex justify-content-between py-2 border-bottom">
+          <a class="text-reset" href="{% url 'chamados:lista' %}?visao=todos&q={{ l.cliente_final|urlencode }}">{{ l.cliente_final }}</a><strong>{{ l.total }}</strong></li>
+        {% empty %}<li class="text-muted">Sem dados ainda.</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="cartao cartao-tabela">
+  <div class="cartao-titulo px-3 pt-3 justify-content-between">
+    <span><i class="bi bi-list-ol text-primary"></i> Fila de manutencao por prazo de SLA</span>
+    <a class="small fw-normal" href="{% url 'chamados:lista' %}?tipo=MANUTENCAO">Ver todas</a>
+  </div>
+  {% with fila=ind.fila|slice:":10" %}{% include "dashboard/_fila.html" %}{% endwith %}
+</div>
+{% endblock %}
+{% block scripts %}{% include "dashboard/_scripts.html" %}{% endblock %}

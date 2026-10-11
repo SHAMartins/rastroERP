@@ -1,0 +1,6 @@
+<ul class="nav nav-pills gap-1 mb-3">
+  <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'dashboard' %} active{% endif %}" href="{% url 'dashboard' %}"><i class="bi bi-grid-1x2"></i> Geral</a></li>
+  <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'painel_triagem' %} active{% endif %}" href="{% url 'painel_triagem' %}"><i class="bi bi-inbox"></i> Triagem</a></li>
+  <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'painel_manutencao' %} active{% endif %}" href="{% url 'painel_manutencao' %}"><i class="bi bi-wrench-adjustable"></i> Manutencao</a></li>
+  <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'painel_instalacao' %} active{% endif %}" href="{% url 'painel_instalacao' %}"><i class="bi bi-router"></i> Instalacao</a></li>
+</ul>

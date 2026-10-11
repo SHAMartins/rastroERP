@@ -1,0 +1,19 @@
+{% load chamados_tags %}
+<div class="table-responsive">
+<table class="table tabela-erp">
+  <thead><tr><th>Atividade</th><th>Tipo</th><th>Titulo / cliente</th><th>Status</th><th>SLA</th></tr></thead>
+  <tbody>
+  {% for c in fila %}
+    <tr>
+      <td class="text-nowrap"><a href="{% url 'chamados:detalhe' c.pk %}">{{ c.numero }}</a></td>
+      <td>{% tipo_badge c %}</td>
+      <td>{{ c.titulo|truncatechars:50 }}<div class="small text-muted">{{ c.cliente }}{% if c.cliente_final %} / {{ c.cliente_final }}{% endif %}</div></td>
+      <td>{% include "ordens/_status.html" with o=c %}</td>
+      <td class="text-nowrap">{% sla_badge c %}<div class="small text-muted mt-1">{% sla_restante c %}</div></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5" class="vazio"><i class="bi bi-emoji-smile"></i>Nada em aberto.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>

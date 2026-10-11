@@ -1,0 +1,18 @@
+{# Janela do scanner por camera. Incluir uma vez na pagina + _scanner_scripts.html no bloco scripts. #}
+<div class="modal fade" id="modal-scanner" tabindex="-1" aria-labelledby="titulo-scanner" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius: 16px">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title" id="titulo-scanner"><i class="bi bi-upc-scan text-primary"></i> Ler codigo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div id="scanner-video" class="rounded-3 overflow-hidden bg-dark" style="min-height: 240px"></div>
+        <p class="small text-muted mt-2 mb-0" id="scanner-status" role="status" aria-live="polite"></p>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Concluir</button>
+      </div>
+    </div>
+  </div>
+</div>

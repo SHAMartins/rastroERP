@@ -1,0 +1,96 @@
+{# Bloco trocado via HTMX a cada entrada/ajuste: saldo, formularios e historico (kardex) #}
+{% if aviso %}<div class="alert alert-success d-flex align-items-center gap-2"><i class="bi bi-check-circle"></i>{{ aviso }}</div>{% endif %}
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <div class="cartao kpi h-100">
+      <span class="kpi-icone {% if produto.saldo <= 0 %}tom-vermelho{% elif produto.abaixo_do_minimo %}tom-amarelo{% else %}tom-verde{% endif %}"><i class="bi bi-boxes"></i></span>
+      <div><div class="kpi-valor">{{ produto.saldo }} <small class="fs-6 text-muted">{{ produto.unidade }}</small></div>
+        <div class="kpi-rotulo">Saldo atual · minimo {{ produto.estoque_minimo }}</div></div>
+    </div>
+  </div>
+  {% if perms.estoque.movimentar_estoque %}
+  <div class="col-md-8">
+    <div class="cartao h-100">
+      <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item"><button class="nav-link{% if not form_ajuste.errors %} active{% endif %}" data-bs-toggle="tab" data-bs-target="#aba-entrada" type="button"><i class="bi bi-box-arrow-in-down"></i> Entrada</button></li>
+        <li class="nav-item"><button class="nav-link{% if form_ajuste.errors %} active text-danger{% endif %}" data-bs-toggle="tab" data-bs-target="#aba-ajuste" type="button"><i class="bi bi-sliders"></i> Ajuste</button></li>
+      </ul>
+      <div class="tab-content">
+        <form class="tab-pane fade{% if not form_ajuste.errors %} show active{% endif %}" id="aba-entrada" method="post" action="{% url 'estoque:entrada' produto.pk %}"
+              hx-post="{% url 'estoque:entrada' produto.pk %}" hx-target="#painel-produto"><div class="row g-2">
+          {% csrf_token %}
+          {% for e in form_entrada.non_field_errors %}<div class="col-12 text-danger small">{{ e }}</div>{% endfor %}
+          {% if produto.controla_serie %}
+            {% include "_campo_scanner.html" with campo=form_entrada.numeros_serie col="col-sm-9" %}
+            {% include "_campo.html" with campo=form_entrada.observacao col="col-sm-9" %}
+          {% else %}
+            {% include "_campo.html" with campo=form_entrada.quantidade col="col-sm-3" %}
+            {% include "_campo.html" with campo=form_entrada.observacao col="col-sm-6" %}
+          {% endif %}
+          <div class="col-sm-3 d-flex align-items-start" style="padding-top:1.9rem"><button class="btn btn-primary w-100"><i class="bi bi-plus-lg"></i> Registrar</button></div>
+        </div></form>
+        <form class="tab-pane fade{% if form_ajuste.errors %} show active{% endif %}" id="aba-ajuste" method="post" action="{% url 'estoque:ajuste' produto.pk %}"
+              hx-post="{% url 'estoque:ajuste' produto.pk %}" hx-target="#painel-produto"><div class="row g-2">
+          {% csrf_token %}
+          {% for e in form_ajuste.non_field_errors %}<div class="col-12 text-danger small">{{ e }}</div>{% endfor %}
+          {% include "_campo.html" with campo=form_ajuste.quantidade col="col-sm-3" %}
+          {% include "_campo.html" with campo=form_ajuste.observacao col="col-sm-6" %}
+          {% if produto.controla_serie %}{% include "_campo_scanner.html" with campo=form_ajuste.numeros_serie col="col-sm-9" %}{% endif %}
+          <div class="col-sm-3 d-flex align-items-start" style="padding-top:1.9rem"><button class="btn btn-outline-primary w-100"><i class="bi bi-check-lg"></i> Ajustar</button></div>
+        </div></form>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-md-8 d-flex align-items-center"><p class="small text-muted mb-0">Entradas e ajustes sao feitos pelo perfil Estoque.</p></div>
+  {% endif %}
+</div>
+
+{% if itens is not None %}
+<div class="cartao cartao-tabela mb-3">
+  <div class="cartao-titulo px-3 pt-3"><i class="bi bi-upc text-primary"></i> Unidades por numero de serie</div>
+  <div class="table-responsive" style="max-height: 320px">
+  <table class="table tabela-erp">
+    <thead><tr><th>No de serie</th><th>Situacao</th><th>Onde esta</th></tr></thead>
+    <tbody>
+    {% for i in itens %}
+      <tr>
+        <td class="fw-semibold text-nowrap">{{ i.numero_serie }}</td>
+        <td><span class="pilula serie-{{ i.status }}">{{ i.get_status_display }}</span></td>
+        <td class="small">{% if i.saida.ordem %}<a href="{% url 'ordens:detalhe' i.saida.ordem.pk %}">OS {{ i.saida.ordem.numero }}</a>
+            - {{ i.saida.ordem.chamado.cliente_final|default:i.saida.ordem.chamado.endereco|truncatechars:40 }}
+          {% elif i.saida %}{{ i.saida.observacao }}{% else %}<span class="text-muted">No estoque</span>{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="3" class="vazio py-3">Nenhuma unidade cadastrada. Registre uma entrada lendo os numeros de serie.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endif %}
+
+<div class="cartao cartao-tabela">
+  <div class="cartao-titulo px-3 pt-3"><i class="bi bi-journal-text text-primary"></i> Historico (kardex)</div>
+  <div class="table-responsive">
+  <table class="table tabela-erp">
+    <thead><tr><th>Quando</th><th>Tipo</th><th class="text-end">Qtd.</th><th class="text-end">Saldo</th><th>Origem</th><th>Por</th></tr></thead>
+    <tbody>
+    {% for m in kardex %}
+      <tr>
+        <td class="small text-nowrap">{{ m.criado_em|date:"d/m/Y H:i" }}</td>
+        <td><span class="pilula mov-{{ m.tipo }}">{{ m.get_tipo_display }}</span></td>
+        <td class="text-end fw-semibold {% if m.quantidade < 0 %}text-danger{% else %}text-success{% endif %}">{% if m.quantidade > 0 %}+{% endif %}{{ m.quantidade }}</td>
+        <td class="text-end">{{ m.saldo_apos }}</td>
+        <td class="small">{% if m.ordem %}<a href="{% url 'ordens:detalhe' m.ordem.pk %}">OS {{ m.ordem.numero }}</a>{% else %}{{ m.observacao|default:"-" }}{% endif %}
+          {% with series=m.itens_entrada.all|default:m.itens_saida.all %}{% if series %}<div class="text-muted">SN: {% for i in series %}{{ i.numero_serie }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endif %}{% endwith %}</td>
+        <td class="small">{{ m.usuario|default:"-" }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="vazio py-3">Nenhuma movimentacao ainda. Registre a primeira entrada.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>

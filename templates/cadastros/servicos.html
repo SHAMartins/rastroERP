@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Servicos{% endblock %}
+{% block titulo_pagina %}Servicos{% endblock %}
+{% block content %}
+<div class="cabecalho-pagina">
+  <div>
+    <h2>Catalogo de servicos</h2>
+    <p>Servicos usados nas ordens de servico. Servico geral vale para todos; exclusivo, so para um cliente.</p>
+  </div>
+</div>
+<div class="row g-3">
+  {% if perms.clientes.add_servico or servico %}
+  <div class="col-xl-4">
+    <form method="post" class="cartao" action="{% if servico %}{% url 'cadastros:servico' servico.pk %}{% else %}{% url 'cadastros:servicos' %}{% endif %}">
+      {% csrf_token %}
+      <div class="cartao-titulo"><i class="bi {% if servico %}bi-pencil{% else %}bi-plus-circle{% endif %} text-primary"></i>
+        {% if servico %}Editar servico{% else %}Novo servico{% endif %}</div>
+      <div class="row g-3">
+        {% include "_campo.html" with campo=form.nome col="col-12" %}
+        {% include "_campo.html" with campo=form.descricao col="col-12" %}
+        {% include "_campo.html" with campo=form.cliente col="col-12" %}
+      </div>
+      <div class="mt-3 d-flex gap-2 justify-content-end">
+        {% if servico %}<a class="btn btn-outline-secondary" href="{% url 'cadastros:servicos' %}">Cancelar</a>{% endif %}
+        <button class="btn btn-primary"><i class="bi bi-check-lg"></i> Salvar</button>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+  <div class="{% if perms.clientes.add_servico or servico %}col-xl-8{% else %}col-12{% endif %}">
+    <div class="cartao cartao-tabela">
+      <div class="table-responsive">
+      <table class="table tabela-erp">
+        <thead><tr><th>Servico</th><th>Disponivel para</th><th>Usado em</th><th></th></tr></thead>
+        <tbody>
+        {% for s in lista %}
+          <tr{% if servico and s.pk == servico.pk %} class="table-active"{% endif %}>
+            <td>{{ s.nome }}{% if s.descricao %}<div class="small text-muted">{{ s.descricao|truncatechars:70 }}</div>{% endif %}</td>
+            <td>{% if s.cliente %}<a href="{% url 'cadastros:cliente' s.cliente.pk %}">{{ s.cliente }}</a>{% else %}<span class="pilula sla-SEM_SLA">Todos</span>{% endif %}</td>
+            <td class="small">{{ s.usos }} OS{{ s.usos|pluralize }}</td>
+            <td class="text-end">{% if perms.clientes.change_servico %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'cadastros:servico' s.pk %}" aria-label="Editar {{ s.nome }}"><i class="bi bi-pencil"></i></a>{% endif %}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4" class="vazio"><i class="bi bi-card-checklist"></i>Nenhum servico cadastrado.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

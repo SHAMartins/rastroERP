@@ -1,0 +1,31 @@
+{# Tabela tipo x prioridade. Parametros: sla (linhas), cliente (None = padrao), editavel #}
+<div class="table-responsive">
+<table class="table tabela-erp tabela-sla mb-0">
+  <thead><tr><th>Tipo</th>{% for c in sla.0.celulas %}<th>{{ c.prioridade }}</th>{% endfor %}</tr></thead>
+  <tbody>
+  {% for linha in sla %}
+    <tr>
+      <td class="fw-semibold">{{ linha.nome }}</td>
+      {% for c in linha.celulas %}
+        <td>
+          {% if editavel %}
+            <div class="d-flex gap-1">
+              <input class="form-control form-control-sm" name="{{ c.chave }}-resposta" value="{{ c.resposta|default_if_none:'' }}" inputmode="decimal"
+                     placeholder="{% if c.ref %}{{ c.ref.horas_resposta|floatformat:'-1' }}{% else %}resp.{% endif %}" aria-label="{{ linha.nome }} {{ c.prioridade }}: primeira resposta (horas)">
+              <input class="form-control form-control-sm" name="{{ c.chave }}-solucao" value="{{ c.solucao|default_if_none:'' }}" inputmode="decimal"
+                     placeholder="{% if c.ref %}{{ c.ref.horas_solucao|floatformat:'-1' }}{% else %}sol.{% endif %}" aria-label="{{ linha.nome }} {{ c.prioridade }}: solucao (horas)">
+            </div>
+          {% elif c.resposta != "" %}
+            <span class="fw-semibold">{{ c.resposta|floatformat:"-1" }}h / {{ c.solucao|floatformat:"-1" }}h</span>
+          {% elif c.ref %}
+            <span class="text-muted">{{ c.ref.horas_resposta|floatformat:"-1" }}h / {{ c.ref.horas_solucao|floatformat:"-1" }}h <small>(padrao)</small></span>
+          {% else %}<span class="text-muted">-</span>{% endif %}
+        </td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="small text-muted mt-2 mb-0">Formato: <strong>primeira resposta / solucao</strong>, em horas corridas.
+  {% if cliente %}Celulas vazias usam o SLA padrao.{% endif %}</p>

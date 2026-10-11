@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{% if usuario %}{{ usuario.username }}{% else %}Novo usuario{% endif %}{% endblock %}
+{% block titulo_pagina %}{% if usuario %}Usuario{% else %}Novo usuario{% endif %}{% endblock %}
+{% block content %}
+<a class="small text-decoration-none" href="{% url 'seguranca:usuarios' %}"><i class="bi bi-arrow-left"></i> Usuarios</a>
+<div class="row g-3 mt-1">
+  <div class="col-xl-7">
+    <form method="post" class="cartao p-4" autocomplete="off">
+      {% csrf_token %}
+      <div class="cartao-titulo"><i class="bi bi-person-gear text-primary"></i> {% if usuario %}{{ usuario.username }}{% else %}Novo usuario{% endif %}</div>
+      {% for e in form.non_field_errors %}<div class="alert alert-danger">{{ e }}</div>{% endfor %}
+      <div class="row g-3">
+        {% include "_campo.html" with campo=form.username col="col-md-6" %}
+        {% include "_campo.html" with campo=form.email col="col-md-6" %}
+        {% include "_campo.html" with campo=form.first_name col="col-md-6" %}
+        {% include "_campo.html" with campo=form.last_name col="col-md-6" %}
+        {% include "_campo.html" with campo=form.perfil col="col-12" %}
+        {% include "_campo.html" with campo=form.senha col="col-md-6" %}
+        {% include "_campo.html" with campo=form.senha2 col="col-md-6" %}
+        <div class="col-12"><div class="form-check">{{ form.is_active }}<label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label></div>
+          {% for e in form.is_active.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+      </div>
+      <div class="mt-4 d-flex gap-2 justify-content-end">
+        <a class="btn btn-outline-secondary" href="{% url 'seguranca:usuarios' %}">Cancelar</a>
+        <button class="btn btn-primary"><i class="bi bi-check-lg"></i> Salvar</button>
+      </div>
+    </form>
+  </div>
+  <div class="col-xl-5">
+    <div class="cartao">
+      <div class="cartao-titulo"><i class="bi bi-diagram-3 text-primary"></i> O que cada perfil pode fazer</div>
+      <ul class="list-unstyled small mb-0">
+        <li class="py-2 border-bottom"><strong>Administrador:</strong> tudo, inclusive usuarios, log de seguranca e o admin do Django.</li>
+        <li class="py-2 border-bottom"><strong>Coordenacao:</strong> triagem, gerar OS, resolver atividades, operar qualquer OS, cadastros e SLA.</li>
+        <li class="py-2 border-bottom"><strong>Tecnico:</strong> opera so as OSs atribuidas a ele (status, material); abre atividades e comenta.</li>
+        <li class="py-2"><strong>Estoque:</strong> produtos, entradas e ajustes de estoque.</li>
+      </ul>
+      <p class="small text-muted mt-3 mb-0">Todos os perfis podem consultar paineis e atividades. A matriz completa fica em <code>seguranca/perfis.py</code>.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
