@@ -103,7 +103,7 @@ def servicos(request, pk=None):
     form = ServicoForm(request.POST or None, instance=servico)
     if request.method == "POST" and form.is_valid():
         salvo = form.save()
-        messages.success(request, f"Servico {salvo.nome} {'atualizado' if servico else 'cadastrado'}.")
+        messages.success(request, f"Serviço {salvo.nome} {'atualizado' if servico else 'cadastrado'}.")
         return redirect("cadastros:servicos")
     lista = Servico.objects.select_related("cliente").annotate(usos=Count("ordemservico"))
     return render(request, "cadastros/servicos.html", {"form": form, "servico": servico, "lista": lista})

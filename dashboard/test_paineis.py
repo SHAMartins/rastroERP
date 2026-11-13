@@ -9,8 +9,8 @@ from chamados.models import Chamado
 
 pytestmark = pytest.mark.django_db
 INSTALACAO = dict(tipo="INSTALACAO", titulo="Ativar link 500M", solicitante_nome="Rui", endereco="Rua C, 3",
-                  detalhes={"servico_contratado": "LINK_DEDICADO", "escopo": "Ativacao", "prerequisitos": "PENDENTE",
-                            "pendencias": "Falta autorizacao do condominio"})
+                  detalhes={"servico_contratado": "LINK_DEDICADO", "escopo": "Ativação", "prerequisitos": "PENDENTE",
+                            "pendencias": "Falta autorização do condomínio"})
 
 
 def test_geral_mostra_status_de_atividades_e_os(logado, chamado, ordem):
@@ -47,4 +47,4 @@ def test_instalacao_mostra_pendencias_e_sem_os(logado, usuario, cliente, chamado
     assert [c.pk for c in r.context["com_pendencia"]] == [inst.pk]
     assert [c.pk for c in r.context["sem_os"]] == [inst.pk]
     assert r.context["ind"]["abertos"] == 1               # a manutencao nao entra no painel de instalacao
-    assert "Falta autorizacao do condominio" in r.content.decode()
+    assert "Falta autorização do condomínio" in r.content.decode()

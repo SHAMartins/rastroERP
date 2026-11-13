@@ -56,7 +56,7 @@ def _gerar_numero():
 
 def _validar(chamado):
     if chamado.tipo in TIPOS_COM_ATIVO and not chamado.ativo.strip():
-        raise ValueError("Informe o ativo ou circuito (obrigatorio para manutencao).")
+        raise ValueError("Informe o ativo ou circuito (obrigatório para manutenção).")
     chamado.detalhes = validar_detalhes(chamado.tipo, chamado.detalhes or {})
 
 
@@ -84,8 +84,8 @@ def _historico(chamado, usuario, campo, novo, anterior=""):
 def _resumo_sla(chamado):
     if not chamado.prazo_solucao:
         return "sem SLA definido"
-    return (f"resposta ate {timezone.localtime(chamado.prazo_resposta):%d/%m %H:%M}, "
-            f"solucao ate {timezone.localtime(chamado.prazo_solucao):%d/%m %H:%M}")
+    return (f"resposta até {timezone.localtime(chamado.prazo_resposta):%d/%m %H:%M}, "
+            f"solução até {timezone.localtime(chamado.prazo_solucao):%d/%m %H:%M}")
 
 
 @transaction.atomic
@@ -106,7 +106,7 @@ def atualizar_chamado(chamado, usuario, **dados):
     status_antes = chamado.status
     status_novo = dados.get("status", status_antes)
     if chamado.encerrado and status_novo == status_antes:
-        raise ValueError("Chamado resolvido/cancelado nao pode ser editado. Reabra antes.")
+        raise ValueError("Chamado resolvido/cancelado não pode ser editado. Reabra antes.")
 
     antes = {c: valor_auditado(chamado, c) for c in Chamado.CAMPOS_AUDITADOS}
     detalhes_antes = dict(chamado.detalhes)
@@ -136,9 +136,9 @@ def _mudar_status(chamado, antes, novo, agora):
     S = Chamado.Status
     abertas = chamado.ordens.exclude(status__in=["FECHADA", "CANCELADA"])
     if novo in Chamado.ENCERRADOS and abertas.exists():
-        raise ValueError("Feche ou cancele as OSs deste chamado antes de encerra-lo.")
+        raise ValueError("Feche ou cancele as OSs deste chamado antes de encerrá-lo.")
     if novo == S.RESOLVIDO and not (chamado.nota_resolucao.strip() and chamado.categoria_encerramento):
-        raise ValueError("Para resolver, informe a nota de resolucao e a categoria de encerramento.")
+        raise ValueError("Para resolver, informe a nota de resolução e a categoria de encerramento.")
 
     if antes == S.NOVO:                      # saiu da fila de triagem = primeira resposta
         _marcar_primeira_resposta(chamado, agora)
@@ -153,7 +153,7 @@ def _mudar_status(chamado, antes, novo, agora):
 @transaction.atomic
 def comentar(chamado, usuario, texto):
     if not texto.strip():
-        raise ValueError("Comentario vazio.")
+        raise ValueError("Comentário vazio.")
     chamado = Chamado.objects.select_for_update().get(pk=chamado.pk)
     if not chamado.primeira_resposta_em:
         _marcar_primeira_resposta(chamado, timezone.now())
@@ -186,7 +186,7 @@ def _horas(texto):
     try:
         valor = Decimal(str(texto).replace(",", ".").strip())
     except InvalidOperation:
-        raise ValueError(f"'{texto}' nao e um numero de horas.") from None
+        raise ValueError(f"'{texto}' não é um número de horas.") from None
     if valor <= 0:
         raise ValueError("Os prazos precisam ser maiores que zero.")
     return valor
@@ -209,7 +209,7 @@ def salvar_tabela_sla(cliente, valores):
         try:
             horas_resposta, horas_solucao = _horas(resposta), _horas(solucao)
             if horas_solucao < horas_resposta:
-                raise ValueError("a solucao nao pode ter prazo menor que a primeira resposta.")
+                raise ValueError("a solução não pode ter prazo menor que a primeira resposta.")
         except ValueError as e:
             erros.append(f"{rotulo}: {e}")
             continue

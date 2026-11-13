@@ -6,4 +6,3 @@ media/
 .env.prod
 staticfiles/
 .pytest_cache/
-CLAUDE.md

@@ -14,7 +14,7 @@ def bootstrap(form):
 
 
 class ComentarioForm(forms.Form):
-    texto = forms.CharField(label="Comentario", widget=forms.Textarea(attrs={"rows": 2}))
+    texto = forms.CharField(label="Comentário", widget=forms.Textarea(attrs={"rows": 2}))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -31,15 +31,15 @@ class StatusForm(forms.Form):
 
 class ProdutoChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, p):
-        serie = " - informe o no de serie" if p.controla_serie else ""
+        serie = " - informe o nº de série" if p.controla_serie else ""
         return f"{p.nome} (saldo {p.saldo} {p.unidade}){serie}"
 
 
 class MaterialForm(forms.Form):
     produto = ProdutoChoiceField(queryset=Produto.objects.none())
     quantidade = forms.IntegerField(min_value=1, initial=1, required=False)
-    numeros_serie = forms.CharField(required=False, label="No de serie", widget=forms.TextInput(attrs={
-        "data-leitor": "anexar-virgula", "placeholder": "No de serie (equipamentos)"}))
+    numeros_serie = forms.CharField(required=False, label="Nº de série", widget=forms.TextInput(attrs={
+        "data-leitor": "anexar-virgula", "placeholder": "Nº de série (equipamentos)"}))
 
     def __init__(self, *args, ordem, **kwargs):
         super().__init__(*args, **kwargs)

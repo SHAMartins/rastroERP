@@ -1,0 +1,28 @@
+{# Carga e resultado por tecnico (so Coordenacao/Administrador). Parametros: tecnicos, os_sem_tecnico #}
+<div class="cartao cartao-tabela h-100">
+  <div class="cartao-titulo px-3 pt-3 justify-content-between">
+    <span>Ordens de serviço por técnico</span>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'exportar_tecnicos' %}"><i class="bi bi-file-earmark-spreadsheet"></i> Exportar</a>
+  </div>
+  {% if os_sem_tecnico %}<div class="px-3 small text-warning"><i class="bi bi-exclamation-triangle"></i> {{ os_sem_tecnico }} OS{{ os_sem_tecnico|pluralize }} em aberto sem técnico.</div>{% endif %}
+  <div class="table-responsive">
+  <table class="table tabela-erp">
+    <thead><tr><th>Técnico</th><th class="text-end">Em aberto</th><th class="text-end">Atrasadas</th>
+      <th class="text-end">Concluídas (30 dias)</th><th class="text-end">Tempo médio</th></tr></thead>
+    <tbody>
+    {% for t in tecnicos %}
+      <tr>
+        <td>{{ t.tecnico.get_full_name|default:t.tecnico.get_username }}</td>
+        <td class="text-end">{{ t.em_aberto }}</td>
+        <td class="text-end{% if t.atrasadas %} text-danger fw-semibold{% endif %}">{{ t.atrasadas }}</td>
+        <td class="text-end">{{ t.concluidas }}</td>
+        <td class="text-end">{% if t.tempo_medio_h is not None %}{{ t.tempo_medio_h }}h{% else %}-{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5" class="vazio py-3">Nenhuma OS atribuída a técnicos ainda.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <div class="px-3 pb-3 small text-muted">Atrasada = OS em aberto com a data agendada já vencida. Tempo médio = da abertura ao fechamento da OS.</div>
+</div>

@@ -14,13 +14,13 @@ from seguranca.arquivos import validar_anexo
 
 class Tipo(models.TextChoices):
     # Manutencao reune incidente, corretiva e preventiva; Instalacao reune ativacao e execucao de servico
-    MANUTENCAO = "MANUTENCAO", "Manutencao"
-    INSTALACAO = "INSTALACAO", "Instalacao"
+    MANUTENCAO = "MANUTENCAO", "Manutenção"
+    INSTALACAO = "INSTALACAO", "Instalação"
 
 
 class Prioridade(models.TextChoices):
     BAIXA = "BAIXA", "Baixa"
-    MEDIA = "MEDIA", "Media"
+    MEDIA = "MEDIA", "Média"
     ALTA = "ALTA", "Alta"
     URGENTE = "URGENTE", "Urgente"
 
@@ -28,33 +28,33 @@ class Prioridade(models.TextChoices):
 class PoliticaSLA(models.Model):
     """Prazos de atendimento. Sem cliente = padrao geral; com cliente = contrato daquele cliente."""
     cliente = models.ForeignKey("clientes.Cliente", null=True, blank=True, on_delete=models.CASCADE,
-                                related_name="politicas_sla", help_text="Vazio = padrao para todos os clientes")
+                                related_name="politicas_sla", help_text="Vazio = padrão para todos os clientes")
     tipo = models.CharField(max_length=12, choices=Tipo.choices)
     prioridade = models.CharField(max_length=10, choices=Prioridade.choices)
     horas_resposta = models.DecimalField("Primeira resposta (horas)", max_digits=6, decimal_places=1)
-    horas_solucao = models.DecimalField("Solucao (horas)", max_digits=6, decimal_places=1)
+    horas_solucao = models.DecimalField("Solução (horas)", max_digits=6, decimal_places=1)
 
     class Meta:
-        verbose_name = "politica de SLA"
-        verbose_name_plural = "politicas de SLA"
+        verbose_name = "política de SLA"
+        verbose_name_plural = "políticas de SLA"
         ordering = ["cliente__nome", "tipo", "prioridade"]
         constraints = [models.UniqueConstraint(fields=["cliente", "tipo", "prioridade"], nulls_distinct=False,
                                                name="sla_unico_por_cliente_tipo_prioridade")]
 
     def __str__(self):
-        dono = self.cliente or "Padrao"
+        dono = self.cliente or "Padrão"
         return f"{dono} - {self.get_tipo_display()} / {self.get_prioridade_display()}"
 
 
 class Chamado(models.Model):
     class Impacto(models.TextChoices):
-        ALTO = "ALTO", "Alto - varios usuarios ou servico parado"
-        MEDIO = "MEDIO", "Medio - servico degradado"
-        BAIXO = "BAIXO", "Baixo - um usuario, sem parada"
+        ALTO = "ALTO", "Alto - vários usuários ou serviço parado"
+        MEDIO = "MEDIO", "Médio - serviço degradado"
+        BAIXO = "BAIXO", "Baixo - um usuário, sem parada"
 
     class Urgencia(models.TextChoices):
-        ALTA = "ALTA", "Alta - precisa de solucao imediata"
-        MEDIA = "MEDIA", "Media - pode aguardar algumas horas"
+        ALTA = "ALTA", "Alta - precisa de solução imediata"
+        MEDIA = "MEDIA", "Média - pode aguardar algumas horas"
         BAIXA = "BAIXA", "Baixa - pode ser agendado"
 
     class Status(models.TextChoices):
@@ -67,17 +67,17 @@ class Chamado(models.Model):
     class Encerramento(models.TextChoices):
         REMOTO = "REMOTO", "Resolvido remotamente"
         CAMPO = "CAMPO", "Resolvido em campo"
-        CONCLUIDO = "CONCLUIDO", "Instalacao/servico concluido"
+        CONCLUIDO = "CONCLUIDO", "Instalação/serviço concluído"
         SEM_DEFEITO = "SEM_DEFEITO", "Sem defeito constatado"
         CLIENTE = "CLIENTE", "Responsabilidade do cliente"
         TERCEIROS = "TERCEIROS", "Causa externa (terceiros, energia, rompimento)"
 
     ENCERRADOS = (Status.RESOLVIDO, Status.CANCELADO)
 
-    numero = models.CharField("Numero do chamado", max_length=20, unique=True, editable=False)
+    numero = models.CharField("Número do chamado", max_length=20, unique=True, editable=False)
     tipo = models.CharField(max_length=12, choices=Tipo.choices)
     cliente = models.ForeignKey("clientes.Cliente", on_delete=models.PROTECT, related_name="chamados")
-    titulo = models.CharField(max_length=150)
+    titulo = models.CharField("Título", max_length=150)
     # Campos especificos do tipo (definidos em chamados/campos.py), sem texto livre generico
     detalhes = models.JSONField(default=dict, blank=True)
 
@@ -87,37 +87,37 @@ class Chamado(models.Model):
 
     # Onde: o endereco fica no proprio chamado (o cliente atende clientes finais com varias unidades)
     cliente_final = models.CharField("Cliente final / unidade", max_length=150, blank=True)
-    endereco = models.CharField("Endereco", max_length=255)
+    endereco = models.CharField("Endereço", max_length=255)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     contato_local = models.CharField("Contato no local", max_length=120, blank=True)
     janela_acesso = models.CharField("Janela de acesso", max_length=120, blank=True,
                                      help_text="Ex.: seg a sex, 8h as 18h")
     ativo = models.CharField("Ativo / circuito", max_length=120, blank=True,
-                             help_text="Designacao do circuito, equipamento ou numero de serie")
+                             help_text="Designação do circuito, equipamento ou número de série")
 
     # Prioridade = matriz impacto x urgencia (calculada, nunca digitada)
     impacto = models.CharField(max_length=6, choices=Impacto.choices, default=Impacto.MEDIO)
-    urgencia = models.CharField("Urgencia", max_length=6, choices=Urgencia.choices, default=Urgencia.MEDIA)
+    urgencia = models.CharField("Urgência", max_length=6, choices=Urgencia.choices, default=Urgencia.MEDIA)
     prioridade = models.CharField(max_length=10, choices=Prioridade.choices, editable=False)
 
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.NOVO)
     responsavel = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT,
-                                    related_name="chamados_responsavel", verbose_name="Responsavel pela triagem")
+                                    related_name="chamados_responsavel", verbose_name="Responsável pela triagem")
     criado_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT,
                                    related_name="chamados_criados", editable=False)
 
     # SLA: prazos calculados na abertura; tempo "pendente cliente" nao conta
     aberto_em = models.DateTimeField(default=timezone.now, editable=False)
     prazo_resposta = models.DateTimeField(null=True, editable=False)
-    prazo_solucao = models.DateTimeField(null=True, editable=False)
+    prazo_solucao = models.DateTimeField("Prazo de solução", null=True, editable=False)
     primeira_resposta_em = models.DateTimeField(null=True, editable=False)
     resolvido_em = models.DateTimeField(null=True, editable=False)
     pausado_desde = models.DateTimeField(null=True, editable=False)
     tempo_pausado = models.DurationField(default=timedelta, editable=False)
 
     # Encerramento: sustenta os indicadores (o que mais quebra e por que)
-    nota_resolucao = models.TextField("Nota de resolucao", blank=True)
+    nota_resolucao = models.TextField("Nota de resolução", blank=True)
     causa = models.CharField("Causa", max_length=150, blank=True)
     categoria_encerramento = models.CharField("Categoria de encerramento", max_length=12,
                                               choices=Encerramento.choices, blank=True)
@@ -131,8 +131,8 @@ class Chamado(models.Model):
         ordering = ["-aberto_em"]
         # Permissoes de negocio (RBAC): distribuidas aos perfis em seguranca/perfis.py
         permissions = [("triar_chamado", "Triar, reclassificar e mudar status de atividades"),
-                       ("gerar_os", "Gerar ordens de servico"),
-                       ("gerenciar_sla", "Editar prazos de SLA (padrao e contratos)")]
+                       ("gerar_os", "Gerar ordens de serviço"),
+                       ("gerenciar_sla", "Editar prazos de SLA (padrão e contratos)")]
 
     def __str__(self):
         return f"{self.numero} - {self.titulo}"
@@ -211,7 +211,7 @@ class ComentarioChamado(models.Model):
 class AnexoChamado(models.Model):
     chamado = models.ForeignKey(Chamado, on_delete=models.PROTECT, related_name="anexos")
     arquivo = models.FileField(upload_to="chamados/%Y/%m/", validators=[validar_anexo])
-    descricao = models.CharField(max_length=150, blank=True)
+    descricao = models.CharField("Descrição", max_length=150, blank=True)
     enviado_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT)
     enviado_em = models.DateTimeField(auto_now_add=True)
 
@@ -230,7 +230,7 @@ class AnexoChamado(models.Model):
 class HistoricoChamado(models.Model):
     """Trilha de auditoria do chamado: quem alterou, quando, qual campo, de que valor para qual."""
     chamado = models.ForeignKey(Chamado, on_delete=models.PROTECT, related_name="historico")
-    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT, verbose_name="Usuário")
     campo = models.CharField(max_length=50)
     valor_anterior = models.TextField(blank=True)
     valor_novo = models.TextField(blank=True)
@@ -238,5 +238,5 @@ class HistoricoChamado(models.Model):
 
     class Meta:
         ordering = ["-alterado_em"]
-        verbose_name = "historico do chamado"
-        verbose_name_plural = "historico dos chamados"
+        verbose_name = "histórico do chamado"
+        verbose_name_plural = "histórico dos chamados"

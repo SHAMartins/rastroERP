@@ -61,6 +61,13 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Em producao o collectstatic grava cada arquivo com o hash do conteudo no nome (erp.css -> erp.3f9c2a1b4d5e.css).
+# Mudou o arquivo, muda o nome: o navegador baixa o novo sem Ctrl+F5 e o Caddy pode guardar em cache por 1 ano.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage."
+                               + ("StaticFilesStorage" if DEBUG else "ManifestStaticFilesStorage")},
+}
 MEDIA_URL = "media/"          # nao e servido publicamente: anexos saem pela view com login
 MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

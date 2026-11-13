@@ -2,7 +2,7 @@
 from django.core.exceptions import PermissionDenied
 
 
-def exigir(usuario, permissao, mensagem="Seu perfil nao permite esta acao."):
+def exigir(usuario, permissao, mensagem="Seu perfil não permite esta ação."):
     if not usuario.has_perm(permissao):
         raise PermissionDenied(mensagem)
 
@@ -16,4 +16,4 @@ def pode_operar_os(usuario, ordem):
 
 def exigir_operar_os(usuario, ordem):
     if not pode_operar_os(usuario, ordem):
-        raise PermissionDenied(f"A OS {ordem.numero} nao esta atribuida a voce.")
+        raise PermissionDenied(f"A OS {ordem.numero} não está atribuída a você.")

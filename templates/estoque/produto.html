@@ -6,7 +6,7 @@
 <div class="cabecalho-pagina mt-2">
   <div>
     <h2>{% if produto %}{{ produto.codigo }} - {{ produto.nome }}{% else %}Novo produto{% endif %}</h2>
-    {% if produto %}<p>{% if produto.tipo %}{{ produto.tipo }}{% if produto.modelo %} · {{ produto.modelo }}{% endif %} · {% endif %}{% if produto.cliente %}Material de {{ produto.cliente }}{% else %}Estoque da empresa{% endif %}{% if produto.controla_serie %} · <i class="bi bi-upc"></i> controla no de serie{% endif %}{% if not produto.ativo %} · inativo{% endif %}</p>{% endif %}
+    {% if produto %}<p>{% if produto.tipo %}{{ produto.tipo }}{% if produto.modelo %} · {{ produto.modelo }}{% endif %} · {% endif %}{% if produto.cliente %}Material de {{ produto.cliente }}{% else %}Estoque da empresa{% endif %}{% if produto.controla_serie %} · <i class="bi bi-upc"></i> controla no de série{% endif %}{% if not produto.ativo %} · inativo{% endif %}</p>{% endif %}
   </div>
 </div>
 
@@ -14,7 +14,7 @@
   <div class="{% if produto %}col-xl-4{% else %}col-xl-6{% endif %}">
     <form method="post" class="cartao">
       {% csrf_token %}
-      <div class="cartao-titulo"><i class="bi bi-box-seam text-primary"></i> Cadastro</div>
+      <div class="cartao-titulo">Cadastro</div>
       <div class="row g-3">
         {% include "_campo_scanner.html" with campo=form.codigo col="col-12" %}
         {% include "_campo.html" with campo=form.nome col="col-12" %}
@@ -31,7 +31,7 @@
         </div>
         <div class="col-12"><div class="form-check">{{ form.ativo }}<label class="form-check-label" for="{{ form.ativo.id_for_label }}">{{ form.ativo.label }}</label></div></div>
       </div>
-      {% if not produto %}<p class="small text-muted mt-3 mb-0">O saldo inicial e lancado depois, como uma entrada.</p>{% endif %}
+      {% if not produto %}<p class="small text-muted mt-3 mb-0">O saldo inicial é lançado depois, como uma entrada.</p>{% endif %}
       <div class="mt-4 d-flex gap-2 justify-content-end">
         <a class="btn btn-outline-secondary" href="{% url 'estoque:produtos' %}">{% if pode_editar %}Cancelar{% else %}Voltar{% endif %}</a>
         {% if pode_editar %}<button class="btn btn-primary"><i class="bi bi-check-lg"></i> Salvar</button>{% endif %}

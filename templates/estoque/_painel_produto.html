@@ -1,12 +1,15 @@
 {# Bloco trocado via HTMX a cada entrada/ajuste: saldo, formularios e historico (kardex) #}
 {% if aviso %}<div class="alert alert-success d-flex align-items-center gap-2"><i class="bi bi-check-circle"></i>{{ aviso }}</div>{% endif %}
+{% if reposicao %}<div class="alert alert-warning d-flex align-items-center gap-2"><i class="bi bi-cart-check"></i>
+  <div>Tarefa de reposição aberta desde {{ reposicao.criada_em|date:"d/m/Y H:i" }}: repor <strong>{{ reposicao.quantidade_sugerida }} {{ produto.unidade }}</strong>.
+  Ela será concluída sozinha quando uma entrada deixar o saldo acima do mínimo ({{ produto.estoque_minimo }}).</div></div>{% endif %}
 
 <div class="row g-3 mb-3">
   <div class="col-md-4">
-    <div class="cartao kpi h-100">
-      <span class="kpi-icone {% if produto.saldo <= 0 %}tom-vermelho{% elif produto.abaixo_do_minimo %}tom-amarelo{% else %}tom-verde{% endif %}"><i class="bi bi-boxes"></i></span>
-      <div><div class="kpi-valor">{{ produto.saldo }} <small class="fs-6 text-muted">{{ produto.unidade }}</small></div>
-        <div class="kpi-rotulo">Saldo atual · minimo {{ produto.estoque_minimo }}</div></div>
+    <div class="cartao kpi h-100{% if produto.saldo <= 0 %} kpi-alerta{% elif produto.abaixo_do_minimo %} kpi-atencao{% endif %}">
+      <div class="kpi-rotulo">Saldo atual</div>
+      <div class="kpi-valor">{{ produto.saldo }}<small> {{ produto.unidade }}</small></div>
+      <div class="kpi-detalhe">estoque mínimo: {{ produto.estoque_minimo }}</div>
     </div>
   </div>
   {% if perms.estoque.movimentar_estoque %}
@@ -43,16 +46,16 @@
     </div>
   </div>
   {% else %}
-  <div class="col-md-8 d-flex align-items-center"><p class="small text-muted mb-0">Entradas e ajustes sao feitos pelo perfil Estoque.</p></div>
+  <div class="col-md-8 d-flex align-items-center"><p class="small text-muted mb-0">Entradas e ajustes são feitos pelo perfil Estoque.</p></div>
   {% endif %}
 </div>
 
 {% if itens is not None %}
 <div class="cartao cartao-tabela mb-3">
-  <div class="cartao-titulo px-3 pt-3"><i class="bi bi-upc text-primary"></i> Unidades por numero de serie</div>
+  <div class="cartao-titulo px-3 pt-3">Unidades por número de série</div>
   <div class="table-responsive" style="max-height: 320px">
   <table class="table tabela-erp">
-    <thead><tr><th>No de serie</th><th>Situacao</th><th>Onde esta</th></tr></thead>
+    <thead><tr><th>Nº de série</th><th>Situação</th><th>Onde está</th></tr></thead>
     <tbody>
     {% for i in itens %}
       <tr>
@@ -63,7 +66,7 @@
           {% elif i.saida %}{{ i.saida.observacao }}{% else %}<span class="text-muted">No estoque</span>{% endif %}</td>
       </tr>
     {% empty %}
-      <tr><td colspan="3" class="vazio py-3">Nenhuma unidade cadastrada. Registre uma entrada lendo os numeros de serie.</td></tr>
+      <tr><td colspan="3" class="vazio py-3">Nenhuma unidade cadastrada. Registre uma entrada lendo os números de série.</td></tr>
     {% endfor %}
     </tbody>
   </table>
@@ -72,7 +75,7 @@
 {% endif %}
 
 <div class="cartao cartao-tabela">
-  <div class="cartao-titulo px-3 pt-3"><i class="bi bi-journal-text text-primary"></i> Historico (kardex)</div>
+  <div class="cartao-titulo px-3 pt-3">Histórico (kardex)</div>
   <div class="table-responsive">
   <table class="table tabela-erp">
     <thead><tr><th>Quando</th><th>Tipo</th><th class="text-end">Qtd.</th><th class="text-end">Saldo</th><th>Origem</th><th>Por</th></tr></thead>
@@ -88,7 +91,7 @@
         <td class="small">{{ m.usuario|default:"-" }}</td>
       </tr>
     {% empty %}
-      <tr><td colspan="6" class="vazio py-3">Nenhuma movimentacao ainda. Registre a primeira entrada.</td></tr>
+      <tr><td colspan="6" class="vazio py-3">Nenhuma movimentação ainda. Registre a primeira entrada.</td></tr>
     {% endfor %}
     </tbody>
   </table>

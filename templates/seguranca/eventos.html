@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Log de seguranca{% endblock %}
-{% block titulo_pagina %}Log de seguranca{% endblock %}
+{% block title %}Log de segurança{% endblock %}
+{% block titulo_pagina %}Log de segurança{% endblock %}
 {% block content %}
 <div class="cabecalho-pagina">
   <div>
-    <h2>Log de seguranca</h2>
-    <p>Logins, falhas, bloqueios, mudancas de perfil e acessos negados. Registro imutavel; nunca guarda senhas.</p>
+    <h2>Log de segurança</h2>
+    <p>Logins, falhas, bloqueios, mudanças de perfil e acessos negados. Registro imutável; nunca guarda senhas.</p>
   </div>
 </div>
 <div class="cartao cartao-tabela">
   <form class="row g-2 p-3 border-bottom" method="get">
-    <div class="col-md-6"><input class="form-control" name="q" value="{{ busca }}" placeholder="Usuario ou IP"></div>
+    <div class="col-md-6"><input class="form-control" name="q" value="{{ busca }}" placeholder="Usuário ou IP"></div>
     <div class="col-md-4"><select class="form-select" name="tipo" data-autoenvio>
       <option value="">Todos os eventos</option>
       {% for valor, nome in tipos %}<option value="{{ valor }}"{% if valor == tipo %} selected{% endif %}>{{ nome }}</option>{% endfor %}
@@ -19,7 +19,7 @@
   </form>
   <div class="table-responsive">
   <table class="table tabela-erp">
-    <thead><tr><th>Quando</th><th>Evento</th><th>Usuario</th><th>IP</th><th>Detalhe</th></tr></thead>
+    <thead><tr><th>Quando</th><th>Evento</th><th>Usuário</th><th>IP</th><th>Detalhe</th></tr></thead>
     <tbody>
     {% for e in pagina %}
       <tr>
@@ -38,7 +38,7 @@
   {% if pagina.has_other_pages %}
   <nav class="d-flex gap-2 align-items-center justify-content-end p-3 border-top">
     {% if pagina.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ busca|urlencode }}&tipo={{ tipo }}&pagina={{ pagina.previous_page_number }}"><i class="bi bi-chevron-left"></i></a>{% endif %}
-    <span class="small text-muted">Pagina {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    <span class="small text-muted">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
     {% if pagina.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ busca|urlencode }}&tipo={{ tipo }}&pagina={{ pagina.next_page_number }}"><i class="bi bi-chevron-right"></i></a>{% endif %}
   </nav>
   {% endif %}

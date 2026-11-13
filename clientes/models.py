@@ -20,7 +20,7 @@ class Servico(models.Model):
     """Catalogo de servicos/atividades. Sem cliente = servico geral; com cliente = especifico dele."""
     cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.PROTECT, related_name="servicos")
     nome = models.CharField(max_length=150)
-    descricao = models.TextField(blank=True)
+    descricao = models.TextField("Descrição", blank=True)
 
     class Meta:
         ordering = ["nome"]

@@ -8,12 +8,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from clientes.models import Cliente
+from config.planilha import resposta_csv
 
 from seguranca.permissoes import exigir
 
 from . import services
 from .forms import AjusteForm, EntradaForm, ProdutoForm
-from .models import ItemSerie, MovimentacaoEstoque, Produto
+from .models import ItemSerie, MovimentacaoEstoque, Produto, TarefaReposicao
 
 
 def _com_saldo(produtos):
@@ -70,6 +71,7 @@ def _eh_htmx(request):
 def _contexto_ficha(produto, form_entrada=None, form_ajuste=None, aviso=""):
     itens = produto.itens.select_related("saida__ordem__chamado") if produto.controla_serie else None
     return {"produto": produto, "kardex": _kardex(produto), "aviso": aviso, "itens": itens,
+            "reposicao": produto.reposicoes.filter(status=TarefaReposicao.Status.ABERTA).first(),
             "form_entrada": form_entrada or EntradaForm(prefix="entrada"),
             "form_ajuste": form_ajuste or AjusteForm(prefix="ajuste")}
 
@@ -132,8 +134,7 @@ def ajuste(request, pk):
                    lambda m: f"Ajuste de {m.quantidade:+d} {m.produto.unidade} registrado.")
 
 
-@login_required
-def movimentacoes(request):
+def _filtrar_movimentacoes(request):
     tipo = request.GET.get("tipo", "")
     busca = request.GET.get("q", "").strip()
     lista = MovimentacaoEstoque.objects.select_related("produto", "usuario", "ordem")
@@ -142,6 +143,64 @@ def movimentacoes(request):
     if busca:
         lista = lista.filter(Q(produto__nome__icontains=busca) | Q(produto__codigo__icontains=busca)
                              | Q(ordem__numero__icontains=busca) | Q(observacao__icontains=busca))
+    return lista, {"tipo": tipo, "busca": busca}
+
+
+@login_required
+def movimentacoes(request):
+    lista, filtros = _filtrar_movimentacoes(request)
     pagina = Paginator(lista, 50).get_page(request.GET.get("pagina"))
     return render(request, "estoque/movimentacoes.html", {
-        "pagina": pagina, "tipo": tipo, "busca": busca, "tipos": MovimentacaoEstoque.Tipo.choices})
+        "pagina": pagina, **filtros, "tipos": MovimentacaoEstoque.Tipo.choices})
+
+
+@login_required
+def exportar_movimentacoes(request):
+    """Planilha do livro-razao do estoque (kardex), com os mesmos filtros da tela."""
+    lista, _ = _filtrar_movimentacoes(request)
+    linhas = [(m.criado_em, m.produto.codigo, m.produto.nome, m.get_tipo_display(), m.quantidade, m.produto.unidade,
+               m.ordem.numero if m.ordem else "",
+               ", ".join(i.numero_serie for i in [*m.itens_entrada.all(), *m.itens_saida.all()]),
+               m.observacao, m.usuario)
+              for m in lista.prefetch_related("itens_entrada", "itens_saida")]
+    return resposta_csv("movimentacoes-estoque", [
+        "Data", "Código", "Produto", "Tipo", "Quantidade", "Unidade", "OS", "Números de série",
+        "Origem / justificativa", "Usuário"], linhas)
+
+
+@login_required
+def reposicoes(request):
+    """Tarefas de reposicao: abertas (o que comprar/repor) e historico das encerradas."""
+    aba = request.GET.get("aba", "abertas")
+    tarefas = TarefaReposicao.objects.select_related("produto", "responsavel", "origem__ordem", "conclusao")
+    if aba == "abertas":
+        tarefas = tarefas.filter(status=TarefaReposicao.Status.ABERTA).order_by("criada_em")
+    else:
+        tarefas = tarefas.exclude(status=TarefaReposicao.Status.ABERTA).order_by("-encerrada_em")
+    pagina = Paginator(tarefas, 30).get_page(request.GET.get("pagina"))
+    return render(request, "estoque/reposicoes.html", {"pagina": pagina, "aba": aba})
+
+
+@login_required
+@require_POST
+def assumir_reposicao(request, pk):
+    exigir(request.user, "estoque.movimentar_estoque")
+    try:
+        services.assumir_reposicao(get_object_or_404(TarefaReposicao, pk=pk), request.user)
+        messages.success(request, "Tarefa de reposição assumida.")
+    except ValueError as e:
+        messages.error(request, str(e))
+    return redirect("estoque:reposicoes")
+
+
+@login_required
+@require_POST
+def cancelar_reposicao(request, pk):
+    exigir(request.user, "estoque.movimentar_estoque")
+    try:
+        services.cancelar_reposicao(get_object_or_404(TarefaReposicao, pk=pk), request.user,
+                                    request.POST.get("motivo", ""))
+        messages.success(request, "Tarefa de reposição cancelada.")
+    except ValueError as e:
+        messages.error(request, str(e))
+    return redirect("estoque:reposicoes")

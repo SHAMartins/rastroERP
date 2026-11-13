@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from chamados import services as chamados
 from chamados.models import Chamado, PoliticaSLA
 from clientes.models import Cliente, Servico
-from estoque.models import ItemSerie, MovimentacaoEstoque, Produto
+from estoque.models import ItemSerie, MovimentacaoEstoque, Produto, TarefaReposicao
 from estoque.services import EstoqueInsuficiente
 from ordens import services
 from ordens.models import Anexo, OrdemServico
@@ -51,6 +51,16 @@ class ProdutoViewSet(viewsets.ModelViewSet):
     serializer_class = s.ProdutoSerializer
     permission_classes = CADASTRO["permission_classes"]
     http_method_names = CADASTRO["http_method_names"]
+
+
+class TarefaReposicaoViewSet(viewsets.ReadOnlyModelViewSet):
+    """Tarefas de reposicao (somente leitura: nascem e se encerram pelas movimentacoes). Filtro: ?status=ABERTA."""
+    serializer_class = s.TarefaReposicaoSerializer
+
+    def get_queryset(self):
+        tarefas = TarefaReposicao.objects.select_related("produto")
+        status = self.request.query_params.get("status")
+        return tarefas.filter(status=status) if status else tarefas
 
 
 class ItemSerieViewSet(viewsets.ReadOnlyModelViewSet):

@@ -27,7 +27,7 @@ def entrar(client, usuario):
 # ---------------- Perfis (RBAC) e IDOR ----------------
 
 def test_tecnico_nao_tria_nem_gera_os(client, com_perfil, chamado):
-    entrar(client, com_perfil("Tecnico"))
+    entrar(client, com_perfil("Técnico"))
     assert client.post(f"/atividades/{chamado.pk}/status/", {"status": "CANCELADO"}).status_code == 403
     assert client.post(f"/atividades/{chamado.pk}/gerar-os/", {"nova_os-titulo": "x"}).status_code == 403
     chamado.refresh_from_db()
@@ -35,7 +35,7 @@ def test_tecnico_nao_tria_nem_gera_os(client, com_perfil, chamado):
 
 
 def test_tecnico_opera_so_a_propria_os(client, com_perfil, ordem):
-    tecnico, outro = com_perfil("Tecnico"), com_perfil("Tecnico", "outro")
+    tecnico, outro = com_perfil("Técnico"), com_perfil("Técnico", "outro")
     ordem.responsavel = tecnico
     ordem.save()
     pre = f"os{ordem.pk}"
@@ -49,14 +49,14 @@ def test_tecnico_opera_so_a_propria_os(client, com_perfil, ordem):
 
 def test_api_tambem_barra_os_de_outro_tecnico(com_perfil, ordem):
     api = APIClient()
-    api.force_authenticate(com_perfil("Tecnico"))
+    api.force_authenticate(com_perfil("Técnico"))
     assert api.patch(f"/api/ordens/{ordem.pk}/", {"status": "FECHADA"}, format="json").status_code == 403
     assert api.patch(f"/api/chamados/{ordem.chamado_id}/", {"status": "CANCELADO"}, format="json").status_code == 403
     assert api.get(f"/api/ordens/{ordem.pk}/").status_code == 200          # consultar pode
 
 
 def test_coordenacao_resolve_mas_nao_mexe_no_estoque(client, com_perfil, chamado):
-    entrar(client, com_perfil("Coordenacao"))
+    entrar(client, com_perfil("Coordenação"))
     r = client.post(f"/atividades/{chamado.pk}/status/", {"status": "RESOLVIDO", "nota_resolucao": "ok",
                                                           "categoria_encerramento": "REMOTO"})
     assert r.status_code == 302
@@ -74,15 +74,15 @@ def test_estoque_lanca_entrada_mas_nao_edita_sla(client, com_perfil):
 
 
 def test_tela_e_menu_escondem_o_que_o_perfil_nao_pode(client, com_perfil, chamado):
-    entrar(client, com_perfil("Tecnico"))
+    entrar(client, com_perfil("Técnico"))
     html = client.get(f"/atividades/{chamado.pk}/").content.decode()
     assert 'id="form-status"' not in html and "Gerar OS" not in html
-    assert "SLA padrao" not in html and "Usuarios" not in html          # itens do menu
-    assert "Perfil: Tecnico" in html
+    assert "SLA padrão" not in html and "Usuários" not in html          # itens do menu
+    assert "Perfil: Técnico" in html
 
 
 def test_acesso_negado_fica_no_log(client, com_perfil):
-    tecnico = com_perfil("Tecnico")
+    tecnico = com_perfil("Técnico")
     entrar(client, tecnico)
     client.get("/seguranca/usuarios/")
     assert E.objects.filter(tipo=E.Tipo.ACESSO_NEGADO, usuario=tecnico, detalhe__contains="/seguranca/usuarios/").exists()
@@ -91,7 +91,7 @@ def test_acesso_negado_fica_no_log(client, com_perfil):
 # ---------------- Login: bloqueio por tentativas e log ----------------
 
 def test_bloqueia_depois_de_5_senhas_erradas_mesmo_com_a_senha_certa(client, com_perfil):
-    com_perfil("Tecnico", "joao")
+    com_perfil("Técnico", "joao")
     for _ in range(5):
         client.post("/entrar/", {"username": "joao", "password": "errada"})
     r = client.post("/entrar/", {"username": "joao", "password": "Senha-forte-123"})
@@ -101,7 +101,7 @@ def test_bloqueia_depois_de_5_senhas_erradas_mesmo_com_a_senha_certa(client, com
 
 
 def test_login_certo_entra_registra_e_nao_guarda_senha(client, com_perfil):
-    com_perfil("Tecnico", "maria")
+    com_perfil("Técnico", "maria")
     client.post("/entrar/", {"username": "maria", "password": "errada"})
     r = client.post("/entrar/", {"username": "maria", "password": "Senha-forte-123"})
     assert r.status_code == 302 and "_auth_user_id" in client.session
@@ -111,10 +111,10 @@ def test_login_certo_entra_registra_e_nao_guarda_senha(client, com_perfil):
 
 
 def test_mensagem_de_erro_nao_revela_se_usuario_existe(client, com_perfil):
-    com_perfil("Tecnico", "ana")
+    com_perfil("Técnico", "ana")
     existe = client.post("/entrar/", {"username": "ana", "password": "x"}).content.decode()
     nao_existe = client.post("/entrar/", {"username": "fantasma", "password": "x"}).content.decode()
-    assert "Usuario ou senha incorretos" in existe and "Usuario ou senha incorretos" in nao_existe
+    assert "Usuário ou senha incorretos" in existe and "Usuário ou senha incorretos" in nao_existe
 
 
 def test_login_do_admin_passa_pela_mesma_porta(client):
@@ -126,28 +126,28 @@ def test_login_do_admin_passa_pela_mesma_porta(client):
 
 def test_senha_fraca_e_recusada_e_forte_usa_argon2(client, usuario):
     entrar(client, usuario)
-    base = {"username": "novo", "perfil": "Tecnico", "is_active": "on"}
+    base = {"username": "novo", "perfil": "Técnico", "is_active": "on"}
     r = client.post("/seguranca/usuarios/novo/", {**base, "senha": "123456", "senha2": "123456"})
     assert "senha" in r.context["form"].errors and not get_user_model().objects.filter(username="novo").exists()
     client.post("/seguranca/usuarios/novo/", {**base, "senha": "Fibra-Optica-2026", "senha2": "Fibra-Optica-2026"})
     novo = get_user_model().objects.get(username="novo")
-    assert novo.password.startswith("argon2") and novo.groups.get().name == "Tecnico" and not novo.is_staff
+    assert novo.password.startswith("argon2") and novo.groups.get().name == "Técnico" and not novo.is_staff
     assert E.objects.filter(tipo=E.Tipo.USUARIO_CRIADO, usuario=novo, autor=usuario).exists()
 
 
 def test_mudanca_de_perfil_fica_no_log_com_o_autor(client, usuario, com_perfil):
-    tecnico = com_perfil("Tecnico")
+    tecnico = com_perfil("Técnico")
     entrar(client, usuario)
-    client.post(f"/seguranca/usuarios/{tecnico.pk}/", {"username": tecnico.username, "perfil": "Coordenacao",
+    client.post(f"/seguranca/usuarios/{tecnico.pk}/", {"username": tecnico.username, "perfil": "Coordenação",
                                                         "is_active": "on"})
     evento = E.objects.filter(tipo=E.Tipo.PERFIL_ALTERADO, usuario=tecnico).latest("criado_em")
-    assert "Coordenacao" in evento.detalhe and evento.autor == usuario
+    assert "Coordenação" in evento.detalhe and evento.autor == usuario
 
 
 def test_administrador_nao_se_tranca_para_fora(client, com_perfil):
     admin = com_perfil("Administrador")
     entrar(client, admin)
-    r = client.post(f"/seguranca/usuarios/{admin.pk}/", {"username": admin.username, "perfil": "Tecnico"})
+    r = client.post(f"/seguranca/usuarios/{admin.pk}/", {"username": admin.username, "perfil": "Técnico"})
     erros = r.context["form"].errors
     assert "perfil" in erros and "is_active" in erros
 
@@ -163,7 +163,7 @@ def test_log_de_seguranca_e_imutavel():
 # ---------------- API: token com validade e limite de requisicoes ----------------
 
 def test_token_tem_validade_e_e_rotacionado(com_perfil):
-    com_perfil("Tecnico", "api")
+    com_perfil("Técnico", "api")
     api = APIClient()
     r1 = api.post("/api/token/", {"username": "api", "password": "Senha-forte-123"})
     assert r1.status_code == 200 and "expira_em" in r1.data
@@ -191,9 +191,9 @@ def test_api_exige_login():
 # ---------------- Anexos ----------------
 
 @pytest.mark.parametrize("nome,conteudo,erro", [
-    ("pagina.html", b"<script>alert(1)</script>", "nao permitido"),
-    ("imagem.svg", b"<svg onload=alert(1)>", "nao permitido"),
-    ("laudo.pdf", b"<script>nao sou pdf</script>", "nao corresponde"),
+    ("pagina.html", b"<script>alert(1)</script>", "não permitido"),
+    ("imagem.svg", b"<svg onload=alert(1)>", "não permitido"),
+    ("laudo.pdf", b"<script>nao sou pdf</script>", "não corresponde"),
 ])
 def test_anexo_perigoso_ou_falso_e_recusado(client, usuario, chamado, nome, conteudo, erro):
     entrar(client, usuario)

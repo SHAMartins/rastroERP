@@ -19,7 +19,7 @@ TIPOS = {
     "txt": None, "csv": None,
 }
 IMAGENS = {"jpg", "jpeg", "png", "webp"}       # abrem no navegador; o resto sempre baixa
-AJUDA_ANEXO = f"Fotos (jpg, png, webp), PDF, Word, Excel, txt ou csv, ate {settings.ANEXO_TAMANHO_MAX_MB} MB."
+AJUDA_ANEXO = f"Fotos (jpg, png, webp), PDF, Word, Excel, txt ou csv, até {settings.ANEXO_TAMANHO_MAX_MB} MB."
 
 
 def extensao(nome):
@@ -29,7 +29,7 @@ def extensao(nome):
 def validar_anexo(arquivo):
     ext = extensao(arquivo.name)
     if ext not in TIPOS:
-        raise ValidationError(f"Tipo de arquivo nao permitido (.{ext or '?'}). "
+        raise ValidationError(f"Tipo de arquivo não permitido (.{ext or '?'}). "
                               f"Aceitos: {', '.join(sorted(TIPOS))}.")
     limite = settings.ANEXO_TAMANHO_MAX_MB * 1024 * 1024
     if arquivo.size > limite:
@@ -38,9 +38,9 @@ def validar_anexo(arquivo):
     inicio = arquivo.read(16)
     arquivo.seek(0)
     if assinaturas and not inicio.startswith(assinaturas):
-        raise ValidationError(f"O conteudo do arquivo nao corresponde a um .{ext}.")
+        raise ValidationError(f"O conteúdo do arquivo não corresponde a um .{ext}.")
     if ext == "webp" and inicio[8:12] != b"WEBP":
-        raise ValidationError("O conteudo do arquivo nao corresponde a um .webp.")
+        raise ValidationError("O conteúdo do arquivo não corresponde a um .webp.")
 
 
 def resposta_download(campo_arquivo):

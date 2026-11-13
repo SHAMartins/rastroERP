@@ -7,7 +7,7 @@
   <div class="cabecalho-pagina">
     <div>
       <h2>Nova atividade</h2>
-      <p>O numero, a prioridade e os prazos de SLA sao calculados automaticamente.</p>
+      <p>O número, a prioridade e os prazos de SLA são calculados automaticamente.</p>
     </div>
   </div>
 
@@ -15,7 +15,7 @@
     {% csrf_token %}
     {% for e in form.non_field_errors %}<div class="alert alert-danger">{{ e }}</div>{% endfor %}
 
-    <p class="secao-form mb-2"><i class="bi bi-ui-radios-grid text-primary"></i> Tipo da atividade <span class="text-danger">*</span></p>
+    <p class="secao-form mb-2">Tipo da atividade <span class="text-danger">*</span></p>
     <div class="row g-2 mb-1">
       {% for valor, nome in form.fields.tipo.choices %}{% if valor %}
         <div class="col-6">
@@ -32,7 +32,7 @@
     {% for e in form.tipo.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
 
     <hr class="my-4">
-    <p class="secao-form mb-3"><i class="bi bi-person-lines-fill text-primary"></i> Cliente e solicitante</p>
+    <p class="secao-form mb-3">Cliente e solicitante</p>
     <div class="row g-3">
       {% include "_campo.html" with campo=form.cliente col="col-md-4" %}
       {% include "_campo.html" with campo=form.solicitante_nome col="col-md-4" %}
@@ -40,7 +40,7 @@
     </div>
 
     <hr class="my-4">
-    <p class="secao-form mb-3"><i class="bi bi-geo-alt text-primary"></i> Local do atendimento</p>
+    <p class="secao-form mb-3">Local do atendimento</p>
     <div class="row g-3">
       {% include "_campo.html" with campo=form.cliente_final col="col-md-4" %}
       {% include "_campo.html" with campo=form.endereco col="col-md-8" %}
@@ -51,7 +51,7 @@
     </div>
 
     <hr class="my-4">
-    <p class="secao-form mb-3"><i class="bi bi-chat-square-text text-primary"></i> O que aconteceu / o que precisa ser feito</p>
+    <p class="secao-form mb-3">O que aconteceu / o que precisa ser feito</p>
     <div class="row g-3">
       {% include "_campo.html" with campo=form.ativo col="col-md-4" %}
       {% include "_campo.html" with campo=form.titulo col="col-md-8" %}
@@ -59,7 +59,7 @@
     <div id="campos-tipo" class="mt-3">{% include "chamados/_campos_tipo.html" %}</div>
 
     <hr class="my-4">
-    <p class="secao-form mb-3"><i class="bi bi-speedometer2 text-primary"></i> Prioridade e SLA</p>
+    <p class="secao-form mb-3">Prioridade e SLA</p>
     <div class="row g-3 align-items-start">
       {% include "_campo.html" with campo=form.impacto col="col-md-4" %}
       {% include "_campo.html" with campo=form.urgencia col="col-md-4" %}

@@ -50,16 +50,16 @@
 
   modalEl.addEventListener("shown.bs.modal", () => {
     if (!window.Html5Qrcode) {
-      status("O scanner por camera nao carregou (sem internet?). Use o leitor USB ou digite o codigo.");
+      status("O scanner por câmera não carregou (sem internet?). Use o leitor USB ou digite o código.");
       return;
     }
-    status("Aponte a camera para o codigo de barras ou QR Code.");
+    status("Aponte a câmera para o código de barras ou QR Code.");
     leitor = new Html5Qrcode("scanner-video");
     leitor.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 280, height: 150 } }, lido, () => {})
       .catch((erro) => {
         leitor = null;                           // nada para parar depois
-        status(`Nao foi possivel abrir a camera (${erro}). Libere a permissao da camera. ` +
-               "Ela so funciona em localhost ou em endereco HTTPS.");
+        status(`Não foi possível abrir a câmera (${erro}). Libere a permissão da câmera. ` +
+               "Ela só funciona em localhost ou em endereço HTTPS.");
       });
   });
 
@@ -86,6 +86,6 @@
       modal.hide();
       return;
     }
-    status(`${lidos.size} lido(s). Ultimo: ${texto}. Continue lendo ou clique em Concluir.`);
+    status(`${lidos.size} lido(s). Último: ${texto}. Continue lendo ou clique em Concluir.`);
   }
 })();

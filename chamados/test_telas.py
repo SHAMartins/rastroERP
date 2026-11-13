@@ -6,7 +6,7 @@ from .models import Chamado
 
 pytestmark = pytest.mark.django_db
 FORM = {"tipo": "MANUTENCAO", "titulo": "Link down", "solicitante_nome": "Ana", "endereco": "Av. Brasil, 100",
-        "cliente_final": "Farmacia Vida - Unidade Centro", "ativo": "CIRC-9", "impacto": "MEDIO", "urgencia": "ALTA",
+        "cliente_final": "Farmácia Vida - Unidade Centro", "ativo": "CIRC-9", "impacto": "MEDIO", "urgencia": "ALTA",
         "d_sintoma": "Sem navegacao", "d_desde_quando": "2026-10-11T07:30", "d_afetados": "UNIDADE"}
 
 
@@ -17,7 +17,7 @@ def test_abrir_atividade_pela_tela(logado, cliente):
     assert c.prioridade == "ALTA" and c.prazo_solucao is not None
     assert c.detalhes["afetados"] == "UNIDADE" and c.detalhes["desde_quando"].startswith("2026-10-11T07:30")
     html = logado.get(resposta.url).content.decode()
-    assert "Quem esta afetado" in html and "Toda a unidade" in html
+    assert "Quem está afetado" in html and "Toda a unidade" in html
 
 
 def test_campos_mudam_conforme_o_tipo(logado):
@@ -43,7 +43,7 @@ def test_formulario_exige_ativo_na_manutencao(logado, cliente):
 def test_previa_mostra_prioridade_e_prazos(logado, cliente):
     html = logado.get("/atividades/previa-sla/", {"cliente": cliente.pk, "tipo": "MANUTENCAO",
                                                    "impacto": "ALTO", "urgencia": "ALTA"}).content.decode()
-    assert "Urgente" in html and "4h" in html and "SLA padrao" in html
+    assert "Urgente" in html and "4h" in html and "SLA padrão" in html
 
 
 def test_gerar_os_leva_para_a_os_dentro_da_atividade(logado, chamado):

@@ -3,8 +3,8 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
-admin.site.site_header = admin.site.site_title = "Rastro - Administracao"
-admin.site.index_title = "Administracao do sistema"
+admin.site.site_header = admin.site.site_title = "Rastro - Administração"
+admin.site.index_title = "Administração do sistema"
 
 # Uma unica porta de entrada (com limite de tentativas): o login do admin redireciona para /entrar/
 urlpatterns = [

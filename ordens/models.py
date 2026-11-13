@@ -18,21 +18,22 @@ class OrdemServico(models.Model):
 
     class Prioridade(models.TextChoices):
         BAIXA = "BAIXA", "Baixa"
-        MEDIA = "MEDIA", "Media"
+        MEDIA = "MEDIA", "Média"
         ALTA = "ALTA", "Alta"
         URGENTE = "URGENTE", "Urgente"
 
-    numero = models.CharField("Numero da OS", max_length=20, unique=True, editable=False)
+    numero = models.CharField("Número da OS", max_length=20, unique=True, editable=False)
     # Copiado do chamado ao gerar a OS (facilita filtros e a regra "produto do cliente")
     cliente = models.ForeignKey("clientes.Cliente", on_delete=models.PROTECT, related_name="ordens", editable=False)
     chamado = models.ForeignKey("chamados.Chamado", on_delete=models.PROTECT, related_name="ordens")
-    servico = models.ForeignKey("clientes.Servico", null=True, blank=True, on_delete=models.PROTECT)
-    titulo = models.CharField(max_length=150)
-    descricao = models.TextField(blank=True)
+    servico = models.ForeignKey("clientes.Servico", null=True, blank=True, on_delete=models.PROTECT,
+                                verbose_name="Serviço")
+    titulo = models.CharField("Título", max_length=150)
+    descricao = models.TextField("Descrição", blank=True)
     prioridade = models.CharField(max_length=10, choices=Prioridade.choices, default=Prioridade.MEDIA)
     status = models.CharField(max_length=15, choices=Status.choices, default=Status.ABERTA)
     responsavel = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT,
-                                    related_name="ordens_responsavel", verbose_name="Tecnico responsavel")
+                                    related_name="ordens_responsavel", verbose_name="Técnico responsável")
     data_abertura = models.DateTimeField(default=timezone.now, editable=False)
     data_agendada = models.DateTimeField(null=True, blank=True)
     data_fechamento = models.DateTimeField(null=True, blank=True, editable=False)
@@ -45,9 +46,9 @@ class OrdemServico(models.Model):
 
     class Meta:
         ordering = ["-data_abertura"]
-        verbose_name = "ordem de servico"
-        verbose_name_plural = "ordens de servico"
-        permissions = [("operar_qualquer_os", "Operar OS de qualquer tecnico (nao so as atribuidas a si)")]
+        verbose_name = "ordem de serviço"
+        verbose_name_plural = "ordens de serviço"
+        permissions = [("operar_qualquer_os", "Operar OS de qualquer técnico (não só as atribuídas a si)")]
 
     def __str__(self):
         return f"OS {self.numero} - {self.titulo}"
@@ -65,7 +66,7 @@ class OrdemServico(models.Model):
 class Anexo(models.Model):
     ordem = models.ForeignKey(OrdemServico, on_delete=models.PROTECT, related_name="anexos")
     arquivo = models.FileField(upload_to="anexos/%Y/%m/", validators=[validar_anexo])
-    descricao = models.CharField(max_length=150, blank=True)
+    descricao = models.CharField("Descrição", max_length=150, blank=True)
     enviado_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT)
     enviado_em = models.DateTimeField(auto_now_add=True)
 
@@ -87,7 +88,7 @@ class Comentario(models.Model):
 class HistoricoAlteracao(models.Model):
     """Trilha de auditoria: quem alterou, quando, qual campo, de que valor para qual."""
     ordem = models.ForeignKey(OrdemServico, on_delete=models.PROTECT, related_name="historico")
-    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT, verbose_name="Usuário")
     campo = models.CharField(max_length=50)
     valor_anterior = models.TextField(blank=True)
     valor_novo = models.TextField(blank=True)
@@ -95,5 +96,5 @@ class HistoricoAlteracao(models.Model):
 
     class Meta:
         ordering = ["-alterado_em"]
-        verbose_name = "historico de alteracao"
-        verbose_name_plural = "historico de alteracoes"
+        verbose_name = "histórico de alteração"
+        verbose_name_plural = "histórico de alterações"

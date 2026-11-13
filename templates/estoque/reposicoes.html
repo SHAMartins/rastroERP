@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Reposição{% endblock %}
+{% block titulo_pagina %}Tarefas de reposição{% endblock %}
+{% block content %}
+<div class="cabecalho-pagina">
+  <div>
+    <h2>Tarefas de reposição</h2>
+    <p>Criadas automaticamente quando o saldo de um produto chega ao estoque mínimo. Concluídas sozinhas quando uma entrada repõe o saldo.</p>
+  </div>
+</div>
+
+<ul class="nav nav-pills mb-3 gap-1">
+  <li class="nav-item"><a class="nav-link{% if aba == 'abertas' %} active{% endif %}" href="?aba=abertas">Abertas</a></li>
+  <li class="nav-item"><a class="nav-link{% if aba != 'abertas' %} active{% endif %}" href="?aba=encerradas">Encerradas</a></li>
+</ul>
+
+<div class="cartao cartao-tabela">
+  <div class="table-responsive">
+  <table class="table tabela-erp">
+    <thead><tr>
+      <th>Produto</th><th class="text-end">Saldo / mínimo</th><th class="text-end">Repor</th><th>Origem</th>
+      {% if aba == 'abertas' %}<th>Desde</th><th>Responsável</th><th></th>{% else %}<th>Situação</th><th>Encerrada</th>{% endif %}
+    </tr></thead>
+    <tbody>
+    {% for t in pagina %}
+      <tr>
+        <td><a href="{% url 'estoque:produto' t.produto.pk %}">{{ t.produto.codigo }}</a> <span class="small">{{ t.produto.nome }}</span></td>
+        <td class="text-end">{% if aba == 'abertas' %}<strong class="text-danger">{{ t.produto.saldo }}</strong>{% else %}{{ t.saldo_na_abertura }}{% endif %} / {{ t.minimo_na_abertura }}</td>
+        <td class="text-end fw-semibold">{{ t.quantidade_sugerida }} {{ t.produto.unidade }}</td>
+        <td class="small">{% if t.origem.ordem %}Uso na <a href="{% url 'ordens:detalhe' t.origem.ordem.pk %}">OS {{ t.origem.ordem.numero }}</a>{% else %}{{ t.origem.get_tipo_display }}{% if t.origem.observacao %}: {{ t.origem.observacao|truncatechars:40 }}{% endif %}{% endif %}</td>
+        {% if aba == 'abertas' %}
+          <td class="small text-nowrap">{{ t.criada_em|date:"d/m/Y H:i" }}</td>
+          <td class="small">{{ t.responsavel|default:"-" }}</td>
+          <td class="text-end text-nowrap">
+            {% if perms.estoque.movimentar_estoque %}
+              <a class="btn btn-sm btn-primary" href="{% url 'estoque:produto' t.produto.pk %}" title="Registrar a entrada na ficha do produto"><i class="bi bi-box-arrow-in-down"></i> Dar entrada</a>
+              {% if not t.responsavel %}
+              <form method="post" action="{% url 'estoque:assumir_reposicao' t.pk %}" class="d-inline">{% csrf_token %}
+                <button class="btn btn-sm btn-outline-primary">Assumir</button></form>
+              {% endif %}
+              <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#cancelar-{{ t.pk }}">Cancelar</button>
+            {% endif %}
+          </td>
+        {% else %}
+          <td><span class="pilula {% if t.status == 'CONCLUIDA' %}sla-CUMPRIDO{% else %}sla-SEM_SLA{% endif %}">{{ t.get_status_display }}</span>
+            {% if t.motivo_cancelamento %}<div class="small text-muted">{{ t.motivo_cancelamento }}</div>{% endif %}</td>
+          <td class="small text-nowrap">{{ t.encerrada_em|date:"d/m/Y H:i" }}{% if t.conclusao %}<div class="text-muted">entrada de {{ t.conclusao.quantidade }} {{ t.produto.unidade }}</div>{% endif %}</td>
+        {% endif %}
+      </tr>
+      {% if aba == 'abertas' and perms.estoque.movimentar_estoque %}
+      <tr class="collapse" id="cancelar-{{ t.pk }}"><td colspan="7">
+        <form method="post" action="{% url 'estoque:cancelar_reposicao' t.pk %}" class="d-flex gap-2">{% csrf_token %}
+          <input class="form-control form-control-sm" name="motivo" required maxlength="200" placeholder="Motivo (ex.: produto saiu de linha)">
+          <button class="btn btn-sm btn-outline-danger text-nowrap">Confirmar cancelamento</button>
+        </form>
+      </td></tr>
+      {% endif %}
+    {% empty %}
+      <tr><td colspan="7" class="vazio">{% if aba == 'abertas' %}Nenhum produto precisando de reposição.{% else %}Nenhuma tarefa encerrada ainda.{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% if pagina.has_other_pages %}
+  <nav class="d-flex gap-2 align-items-center justify-content-end p-3 border-top">
+    {% if pagina.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?aba={{ aba }}&pagina={{ pagina.previous_page_number }}"><i class="bi bi-chevron-left"></i></a>{% endif %}
+    <span class="small text-muted">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?aba={{ aba }}&pagina={{ pagina.next_page_number }}"><i class="bi bi-chevron-right"></i></a>{% endif %}
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

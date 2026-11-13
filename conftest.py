@@ -15,6 +15,13 @@ def cache_limpo():
     cache.clear()
 
 
+@pytest.fixture(autouse=True)
+def estaticos_sem_manifesto(settings):
+    """Com DEBUG=False os estaticos usam nomes com hash, que exigem collectstatic; nos testes nao ha manifesto."""
+    settings.STORAGES = {**settings.STORAGES,
+                         "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}}
+
+
 @pytest.fixture
 def com_perfil(db):
     """Cria um usuario com um dos perfis (Administrador, Coordenacao, Tecnico, Estoque)."""
@@ -47,7 +54,7 @@ def cliente(db):
 def chamado(usuario, cliente):
     return chamados.abrir_chamado(
         usuario, tipo="MANUTENCAO", cliente=cliente, titulo="Link sem sinal", solicitante_nome="Ana",
-        cliente_final="Mercado Bom Preco - Loja 3", endereco="Rua B, 2", ativo="CIRC-0001",
+        cliente_final="Mercado Bom Preço - Loja 3", endereco="Rua B, 2", ativo="CIRC-0001",
         impacto="ALTO", urgencia="ALTA",
         detalhes={"sintoma": "ONT com LOS vermelho", "desde_quando": "2026-10-11T08:00", "afetados": "UNIDADE"})
 

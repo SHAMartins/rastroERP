@@ -6,39 +6,40 @@ Esconder o item e so conforto visual: cada tela confere a permissao de novo no b
 """
 
 MENU = [
-    {"nome": "Paineis", "icone": "bi-grid-1x2", "prefixos": ["/$", "/paineis/"], "itens": [
+    {"nome": "Painéis", "icone": "bi-grid-1x2", "prefixos": ["/$", "/paineis/"], "itens": [
         {"nome": "Geral", "url": "/", "icone": "bi-speedometer2"},
         {"nome": "Triagem", "url": "/paineis/triagem/", "icone": "bi-inbox"},
-        {"nome": "Manutencao", "url": "/paineis/manutencao/", "icone": "bi-wrench-adjustable"},
-        {"nome": "Instalacao", "url": "/paineis/instalacao/", "icone": "bi-router"},
+        {"nome": "Manutenção", "url": "/paineis/manutencao/", "icone": "bi-wrench-adjustable"},
+        {"nome": "Instalação", "url": "/paineis/instalacao/", "icone": "bi-router"},
     ]},
     # Atividade = chamado + suas OSs, na mesma tela
     {"nome": "Atividades", "icone": "bi-headset", "prefixos": ["/atividades/", "/ordens/"], "itens": [
         {"nome": "Nova atividade", "url": "/atividades/novo/", "icone": "bi-plus-circle", "perm": "chamados.add_chamado"},
         {"nome": "Fila em aberto", "url": "/atividades/", "icone": "bi-list-ol"},
         {"nome": "Aguardando triagem", "url": "/atividades/?status=NOVO", "icone": "bi-inbox"},
-        {"nome": "Manutencao", "url": "/atividades/?tipo=MANUTENCAO", "icone": "bi-wrench-adjustable"},
-        {"nome": "Instalacao", "url": "/atividades/?tipo=INSTALACAO", "icone": "bi-router"},
+        {"nome": "Manutenção", "url": "/atividades/?tipo=MANUTENCAO", "icone": "bi-wrench-adjustable"},
+        {"nome": "Instalação", "url": "/atividades/?tipo=INSTALACAO", "icone": "bi-router"},
         {"nome": "Minhas OSs", "url": "/atividades/?minhas=1", "icone": "bi-person-check"},
         {"nome": "Todas", "url": "/atividades/?visao=todos", "icone": "bi-archive"},
     ]},
     {"nome": "Estoque", "icone": "bi-box-seam", "prefixos": ["/estoque/"], "itens": [
         {"nome": "Produtos", "url": "/estoque/", "icone": "bi-boxes"},
         {"nome": "Novo produto", "url": "/estoque/produtos/novo/", "icone": "bi-plus-circle", "perm": "estoque.add_produto"},
+        {"nome": "Tarefas de reposição", "url": "/estoque/reposicao/", "icone": "bi-cart-check"},
         {"nome": "Estoque baixo", "url": "/estoque/?filtro=baixo", "icone": "bi-exclamation-triangle"},
-        {"nome": "Movimentacoes", "url": "/estoque/movimentacoes/", "icone": "bi-arrow-left-right"},
+        {"nome": "Movimentações", "url": "/estoque/movimentacoes/", "icone": "bi-arrow-left-right"},
     ]},
     {"nome": "Cadastros", "icone": "bi-person-vcard", "prefixos": ["/cadastros/"], "itens": [
         {"nome": "Clientes", "url": "/cadastros/clientes/", "icone": "bi-people"},
         {"nome": "Novo cliente", "url": "/cadastros/clientes/novo/", "icone": "bi-person-plus", "perm": "clientes.add_cliente"},
-        {"nome": "Servicos", "url": "/cadastros/servicos/", "icone": "bi-card-checklist"},
-        {"nome": "SLA padrao", "url": "/cadastros/sla/", "icone": "bi-stopwatch", "perm": "chamados.gerenciar_sla"},
+        {"nome": "Serviços", "url": "/cadastros/servicos/", "icone": "bi-card-checklist"},
+        {"nome": "SLA padrão", "url": "/cadastros/sla/", "icone": "bi-stopwatch", "perm": "chamados.gerenciar_sla"},
     ]},
-    {"nome": "Seguranca", "icone": "bi-shield-lock", "prefixos": ["/seguranca/"], "itens": [
-        {"nome": "Usuarios", "url": "/seguranca/usuarios/", "icone": "bi-people", "perm": "auth.change_user"},
-        {"nome": "Log de seguranca", "url": "/seguranca/eventos/", "icone": "bi-journal-lock",
+    {"nome": "Segurança", "icone": "bi-shield-lock", "prefixos": ["/seguranca/"], "itens": [
+        {"nome": "Usuários", "url": "/seguranca/usuarios/", "icone": "bi-people", "perm": "auth.change_user"},
+        {"nome": "Log de segurança", "url": "/seguranca/eventos/", "icone": "bi-journal-lock",
          "perm": "seguranca.view_eventoseguranca"},
-        {"nome": "Administracao (Django)", "url": "/admin/", "icone": "bi-gear", "perm": "staff"},
+        {"nome": "Administração (Django)", "url": "/admin/", "icone": "bi-gear", "perm": "staff"},
     ]},
     {"nome": "API", "icone": "bi-braces", "url": "/api/docs/", "prefixos": ["/api/"]},
 ]

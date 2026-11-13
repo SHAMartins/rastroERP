@@ -5,7 +5,7 @@
 <div class="cabecalho-pagina">
   <div>
     <h2>Clientes</h2>
-    <p>Contratantes dos servicos. Cada cliente pode ter o seu contrato de SLA.</p>
+    <p>Contratantes dos serviços. Cada cliente pode ter o seu contrato de SLA.</p>
   </div>
   {% if perms.clientes.add_cliente %}<a class="btn btn-primary" href="{% url 'cadastros:cliente_novo' %}"><i class="bi bi-person-plus"></i> Novo cliente</a>{% endif %}
 </div>
@@ -34,11 +34,11 @@
         <td><a href="{% url 'cadastros:cliente' c.pk %}">{{ c.nome }}</a>{% if not c.ativo %} <span class="pilula st-PAUSADA">Inativo</span>{% endif %}</td>
         <td class="small text-nowrap">{{ c.documento }}</td>
         <td class="small">{{ c.email|default:"" }}{% if c.email and c.telefone %}<br>{% endif %}{{ c.telefone|default:"" }}</td>
-        <td>{% if c.contrato %}<span class="pilula sla-NO_PRAZO">Contrato proprio</span>{% else %}<span class="pilula sla-SEM_SLA">Padrao</span>{% endif %}</td>
+        <td>{% if c.contrato %}<span class="pilula sla-NO_PRAZO">Contrato próprio</span>{% else %}<span class="pilula sla-SEM_SLA">Padrão</span>{% endif %}</td>
         <td>{% if c.abertas %}<a href="{% url 'chamados:lista' %}?q={{ c.nome|urlencode }}">{{ c.abertas }}</a>{% else %}<span class="text-muted">0</span>{% endif %}</td>
       </tr>
     {% empty %}
-      <tr><td colspan="5" class="vazio"><i class="bi bi-people"></i>Nenhum cliente encontrado.
+      <tr><td colspan="5" class="vazio">Nenhum cliente encontrado.
         <div class="mt-2"><a class="btn btn-sm btn-primary" href="{% url 'cadastros:cliente_novo' %}">Cadastrar cliente</a></div></td></tr>
     {% endfor %}
     </tbody>
@@ -47,7 +47,7 @@
   {% if pagina.has_other_pages %}
   <nav class="d-flex gap-2 align-items-center justify-content-end p-3 border-top">
     {% if pagina.has_previous %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ busca|urlencode }}&situacao={{ situacao }}&pagina={{ pagina.previous_page_number }}"><i class="bi bi-chevron-left"></i></a>{% endif %}
-    <span class="small text-muted">Pagina {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    <span class="small text-muted">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
     {% if pagina.has_next %}<a class="btn btn-sm btn-outline-secondary" href="?q={{ busca|urlencode }}&situacao={{ situacao }}&pagina={{ pagina.next_page_number }}"><i class="bi bi-chevron-right"></i></a>{% endif %}
   </nav>
   {% endif %}

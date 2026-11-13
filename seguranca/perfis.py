@@ -4,8 +4,8 @@ A matriz fica so aqui. Ela e aplicada aos grupos a cada `migrate` (sinal post_mi
 para mudar o que um perfil pode fazer, edite esta lista e rode `python manage.py migrate`.
 """
 ADMINISTRADOR = "Administrador"
-COORDENACAO = "Coordenacao"
-TECNICO = "Tecnico"
+COORDENACAO = "Coordenação"
+TECNICO = "Técnico"
 ESTOQUE = "Estoque"
 
 # Todos os perfis podem consultar tudo, abrir atividades, comentar e anexar
@@ -24,9 +24,9 @@ PERFIS = {
 }
 
 DESCRICOES = {
-    ADMINISTRADOR: "Tudo, inclusive usuarios e log de seguranca",
+    ADMINISTRADOR: "Tudo, inclusive usuários e log de segurança",
     COORDENACAO: "Triagem, gerar OS, resolver, cadastros e SLA; opera qualquer OS",
-    TECNICO: "Opera as OSs atribuidas a ele (status, material); abre atividades",
+    TECNICO: "Opera as OSs atribuídas a ele (status, material); abre atividades",
     ESTOQUE: "Produtos, entradas e ajustes de estoque",
 }
 
@@ -47,6 +47,22 @@ def sincronizar_perfis(**kwargs):
             app, codigo = p.split(".")
             encontradas += list(Permission.objects.filter(content_type__app_label=app, codename=codigo))
         grupo.permissions.set(encontradas)
+    _atualizar_nomes_das_permissoes()
+
+
+def _atualizar_nomes_das_permissoes():
+    """O Django cria as permissoes do Meta.permissions mas nunca renomeia: mantem o texto igual ao do model."""
+    from django.apps import apps
+    from django.contrib.auth.models import Permission
+    from django.contrib.contenttypes.models import ContentType
+
+    for app in APPS_DO_SISTEMA:
+        for model in apps.get_app_config(app).get_models():
+            if not model._meta.permissions:
+                continue
+            tipo = ContentType.objects.get_for_model(model)
+            for codigo, nome in model._meta.permissions:
+                Permission.objects.filter(content_type=tipo, codename=codigo).exclude(name=nome).update(name=nome)
 
 
 def perfil_de(usuario):

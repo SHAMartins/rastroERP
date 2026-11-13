@@ -47,7 +47,7 @@ def perfil_alterado(sender, instance, action, pk_set, **kwargs):
 @receiver(m2m_changed, sender=User.user_permissions.through)
 def permissao_alterada(sender, instance, action, **kwargs):
     if action in ("post_add", "post_remove", "post_clear") and isinstance(instance, User):
-        registrar(E.Tipo.PERFIL_ALTERADO, instance, detalhe="Permissoes individuais alteradas")
+        registrar(E.Tipo.PERFIL_ALTERADO, instance, detalhe="Permissões individuais alteradas")
 
 
 @receiver(pre_save, sender=User)

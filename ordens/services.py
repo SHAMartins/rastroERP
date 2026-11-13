@@ -29,14 +29,14 @@ def valor_auditado(obj, campo):
 def _validar_servico(cliente_id, servico=None):
     """Servico especifico de um cliente nao pode ser usado em OS de outro cliente."""
     if servico is not None and servico.cliente_id and servico.cliente_id != cliente_id:
-        raise ValueError("Este servico e exclusivo de outro cliente.")
+        raise ValueError("Este serviço é exclusivo de outro cliente.")
 
 
 @transaction.atomic
 def abrir_os(usuario, chamado, **dados):
     """Toda OS nasce de um chamado. Cliente e endereco vem dele. Use chamados.services.gerar_os."""
     if chamado.status in Chamado.ENCERRADOS:
-        raise ValueError("Nao e possivel gerar OS para chamado resolvido ou cancelado.")
+        raise ValueError("Não é possível gerar OS para chamado resolvido ou cancelado.")
     _validar_servico(chamado.cliente_id, dados.get("servico"))
     dados.pop("cliente", None)
     ordem = OrdemServico(numero=_gerar_numero(), criado_por=usuario, chamado=chamado,
@@ -53,7 +53,7 @@ def atualizar_os(ordem, usuario, **dados):
     ordem = OrdemServico.objects.select_for_update().get(pk=ordem.pk)
     if ordem.status in (OrdemServico.Status.FECHADA, OrdemServico.Status.CANCELADA) \
             and dados.get("status", ordem.status) == ordem.status:
-        raise ValueError("OS fechada/cancelada nao pode ser editada. Reabra antes.")
+        raise ValueError("OS fechada/cancelada não pode ser editada. Reabra antes.")
     _validar_servico(ordem.cliente_id, dados.get("servico"))
 
     antes = {c: valor_auditado(ordem, c) for c in OrdemServico.CAMPOS_AUDITADOS}
@@ -76,7 +76,7 @@ def atualizar_os(ordem, usuario, **dados):
 
 def comentar(ordem, usuario, texto):
     if not texto.strip():
-        raise ValueError("Comentario vazio.")
+        raise ValueError("Comentário vazio.")
     return Comentario.objects.create(ordem=ordem, autor=usuario, texto=texto.strip())
 
 
@@ -84,7 +84,7 @@ def comentar(ordem, usuario, texto):
 def registrar_material(ordem, usuario, produto_id, quantidade=None, numeros_serie=None):
     """Integracao OS -> Estoque: o material usado gera saida rastreavel ligada a OS (e a unidade, se tiver serie)."""
     if ordem.status in (OrdemServico.Status.FECHADA, OrdemServico.Status.CANCELADA):
-        raise ValueError("Nao e possivel lancar material em OS fechada/cancelada.")
+        raise ValueError("Não é possível lançar material em OS fechada/cancelada.")
     mov = estoque.baixar_para_os(produto_id, quantidade, ordem, usuario, numeros_serie)
     series = estoque.ler_series(numeros_serie)
     texto = f"{-mov.quantidade} {mov.produto.unidade} de {mov.produto.nome}"

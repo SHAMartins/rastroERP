@@ -21,7 +21,7 @@ class ClienteForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["documento"].widget.attrs["placeholder"] = "CPF ou CNPJ, com ou sem pontuacao"
+        self.fields["documento"].widget.attrs["placeholder"] = "CPF ou CNPJ, com ou sem pontuação"
         bootstrap(self)
         self.fields["ativo"].widget.attrs["class"] = "form-check-input"
 
@@ -29,10 +29,10 @@ class ClienteForm(forms.ModelForm):
         # Aceita com ou sem pontuacao e grava sempre no mesmo formato (evita duplicidade disfarcada)
         digitos = re.sub(r"\D", "", self.cleaned_data["documento"])
         if len(digitos) not in (11, 14):
-            raise forms.ValidationError("Informe um CPF (11 digitos) ou CNPJ (14 digitos).")
+            raise forms.ValidationError("Informe um CPF (11 dígitos) ou CNPJ (14 dígitos).")
         documento = formatar_documento(digitos)
         if Cliente.objects.filter(documento=documento).exclude(pk=self.instance.pk).exists():
-            raise forms.ValidationError("Ja existe um cliente com este documento.")
+            raise forms.ValidationError("Já existe um cliente com este documento.")
         return documento
 
 
@@ -41,9 +41,9 @@ class ServicoForm(forms.ModelForm):
         model = Servico
         fields = ["nome", "descricao", "cliente"]
         widgets = {"descricao": forms.Textarea(attrs={"rows": 2})}
-        help_texts = {"cliente": "Deixe vazio para um servico disponivel a todos os clientes."}
+        help_texts = {"cliente": "Deixe vazio para um serviço disponível a todos os clientes."}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["cliente"].empty_label = "Todos os clientes (servico geral)"
+        self.fields["cliente"].empty_label = "Todos os clientes (serviço geral)"
         bootstrap(self)

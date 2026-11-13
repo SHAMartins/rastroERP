@@ -9,7 +9,7 @@ class PoliticaSLAInline(admin.TabularInline):
     """Contrato de SLA do cliente. Combinacoes nao cadastradas usam o SLA padrao."""
     model = PoliticaSLA
     extra = 0
-    verbose_name_plural = "SLA do contrato (vazio = usa o SLA padrao)"
+    verbose_name_plural = "SLA do contrato (vazio = usa o SLA padrão)"
 
 
 class ServicoInline(admin.TabularInline):

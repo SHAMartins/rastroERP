@@ -1,23 +1,23 @@
 {% extends "base.html" %}
 {% block title %}SLA{% endblock %}
-{% block titulo_pagina %}{% if cliente %}Contrato de SLA{% else %}SLA padrao{% endif %}{% endblock %}
+{% block titulo_pagina %}{% if cliente %}Contrato de SLA{% else %}SLA padrão{% endif %}{% endblock %}
 {% block content %}
 {% if cliente %}
   <a class="small text-decoration-none" href="{% url 'cadastros:cliente' cliente.pk %}"><i class="bi bi-arrow-left"></i> {{ cliente.nome }}</a>
 {% endif %}
 <div class="cabecalho-pagina mt-2">
   <div>
-    <h2>{% if cliente %}Contrato de SLA - {{ cliente.nome }}{% else %}SLA padrao{% endif %}</h2>
-    <p>{% if cliente %}Preencha so o que for diferente do padrao; o cinza mostra o prazo padrao de cada celula.
-       {% else %}Vale para todos os clientes que nao tem prazo proprio no contrato.{% endif %}
-       Mudancas valem para as atividades abertas daqui em diante.</p>
+    <h2>{% if cliente %}Contrato de SLA - {{ cliente.nome }}{% else %}SLA padrão{% endif %}</h2>
+    <p>{% if cliente %}Preencha só o que for diferente do padrão; o cinza mostra o prazo padrão de cada célula.
+       {% else %}Vale para todos os clientes que não têm prazo próprio no contrato.{% endif %}
+       Mudanças valem para as atividades abertas daqui em diante.</p>
   </div>
 </div>
 <form method="post" class="cartao">
   {% csrf_token %}
   <div class="d-flex gap-3 small text-muted mb-2">
-    <span><i class="bi bi-reply"></i> 1o campo: primeira resposta (h)</span>
-    <span><i class="bi bi-flag"></i> 2o campo: solucao (h)</span>
+    <span><i class="bi bi-reply"></i> 1º campo: primeira resposta (h)</span>
+    <span><i class="bi bi-flag"></i> 2º campo: solução (h)</span>
   </div>
   {% include "cadastros/_tabela_sla.html" with editavel=True %}
   <div class="mt-4 d-flex gap-2 justify-content-end">

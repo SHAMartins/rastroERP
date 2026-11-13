@@ -6,7 +6,7 @@
   <div class="input-group">
     {{ campo }}
     <button type="button" class="btn btn-outline-secondary" data-scanner-alvo="#{{ campo.id_for_label }}"
-            title="Ler com a camera" aria-label="Ler {{ campo.label|lower }} com a camera"><i class="bi bi-upc-scan"></i></button>
+            title="Ler com a câmera" aria-label="Ler {{ campo.label|lower }} com a câmera"><i class="bi bi-upc-scan"></i></button>
   </div>
   {% if campo.help_text %}<div class="form-text">{{ campo.help_text }}</div>{% endif %}
   {% for e in campo.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}

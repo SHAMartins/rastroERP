@@ -12,7 +12,7 @@ class PoliticaSLAAdmin(admin.ModelAdmin):
 
     @admin.display(description="Cliente", ordering="cliente__nome")
     def cliente_ou_padrao(self, obj):
-        return obj.cliente or "Padrao (todos os clientes)"
+        return obj.cliente or "Padrão (todos os clientes)"
 
 
 class SomenteLeitura(admin.TabularInline):

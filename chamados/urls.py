@@ -6,6 +6,7 @@ app_name = "chamados"
 urlpatterns = [
     path("", views.lista, name="lista"),
     path("novo/", views.novo, name="novo"),
+    path("exportar/", views.exportar, name="exportar"),
     path("previa-sla/", views.previa_sla, name="previa_sla"),
     path("campos-tipo/", views.campos_tipo, name="campos_tipo"),
     path("<int:pk>/", views.detalhe, name="detalhe"),

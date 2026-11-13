@@ -6,31 +6,35 @@
 <div class="cabecalho-pagina">
   <div>
     <h2>Triagem</h2>
-    <p>Atividades novas aguardando a primeira resposta, da que vence primeiro para a ultima.</p>
+    <p>Atividades novas aguardando a primeira resposta, da que vence primeiro para a última.</p>
   </div>
 </div>
 {% include "dashboard/_nav.html" %}
 
 <div class="row g-3 mb-3">
   <div class="col-sm-6 col-xl-3"><div class="cartao kpi h-100">
-    <span class="kpi-icone tom-azul"><i class="bi bi-inbox"></i></span>
-    <div><div class="kpi-valor">{{ novos|length }}</div><div class="kpi-rotulo">Aguardando triagem<br>{{ sem_responsavel }} sem responsavel</div></div></div></div>
+    <div class="kpi-rotulo">Aguardando triagem</div>
+    <div class="kpi-valor">{{ novos|length }}</div>
+    <div class="kpi-detalhe">{{ sem_responsavel }} sem responsável</div></div></div>
+  <div class="col-sm-6 col-xl-3"><div class="cartao kpi h-100{% if vencidos %} kpi-alerta{% elif vence_logo %} kpi-atencao{% endif %}">
+    <div class="kpi-rotulo">Resposta vencida</div>
+    <div class="kpi-valor">{{ vencidos }}</div>
+    <div class="kpi-detalhe">{{ vence_logo }} vence{{ vence_logo|pluralize:"m" }} em até 1 h</div></div></div>
   <div class="col-sm-6 col-xl-3"><div class="cartao kpi h-100">
-    <span class="kpi-icone tom-vermelho"><i class="bi bi-alarm"></i></span>
-    <div><div class="kpi-valor{% if vencidos %} text-danger{% endif %}">{{ vencidos }}</div><div class="kpi-rotulo">Resposta vencida<br>{{ vence_logo }} vence{{ vence_logo|pluralize:"m" }} em ate 1h</div></div></div></div>
+    <div class="kpi-rotulo">1ª resposta no prazo</div>
+    <div class="kpi-valor">{% if resposta_no_prazo is not None %}{{ resposta_no_prazo }}<small>%</small>{% else %}–{% endif %}</div>
+    <div class="kpi-detalhe">últimos 30 dias</div></div></div>
   <div class="col-sm-6 col-xl-3"><div class="cartao kpi h-100">
-    <span class="kpi-icone tom-verde"><i class="bi bi-reply"></i></span>
-    <div><div class="kpi-valor">{% if resposta_no_prazo is not None %}{{ resposta_no_prazo }}%{% else %}-{% endif %}</div><div class="kpi-rotulo">1a resposta no prazo<br>ultimos 30 dias</div></div></div></div>
-  <div class="col-sm-6 col-xl-3"><div class="cartao kpi h-100">
-    <span class="kpi-icone tom-amarelo"><i class="bi bi-stopwatch"></i></span>
-    <div><div class="kpi-valor">{% if tempo_medio_min is not None %}{{ tempo_medio_min }}min{% else %}-{% endif %}</div><div class="kpi-rotulo">Tempo medio de 1a resposta<br>ultimos 30 dias</div></div></div></div>
+    <div class="kpi-rotulo">Tempo médio de 1ª resposta</div>
+    <div class="kpi-valor">{% if tempo_medio_min is not None %}{{ tempo_medio_min }}<small> min</small>{% else %}–{% endif %}</div>
+    <div class="kpi-detalhe">últimos 30 dias</div></div></div>
 </div>
 
 <div class="cartao cartao-tabela mb-3">
-  <div class="cartao-titulo px-3 pt-3"><i class="bi bi-list-ol text-primary"></i> Fila de triagem</div>
+  <div class="cartao-titulo px-3 pt-3">Fila de triagem</div>
   <div class="table-responsive">
   <table class="table tabela-erp">
-    <thead><tr><th>Atividade</th><th>Tipo</th><th>Titulo / cliente</th><th>Prioridade</th><th>Na fila ha</th><th>Responder ate</th><th>Responsavel</th></tr></thead>
+    <thead><tr><th>Atividade</th><th>Tipo</th><th>Título / cliente</th><th>Prioridade</th><th>Na fila há</th><th>Responder até</th><th>Responsável</th></tr></thead>
     <tbody>
     {% for c in novos %}
       <tr{% if c.resposta_vencida %} class="table-danger"{% elif c.resposta_vence_logo %} class="table-warning"{% endif %}>
@@ -43,7 +47,7 @@
         <td class="small">{{ c.responsavel|default:"-" }}</td>
       </tr>
     {% empty %}
-      <tr><td colspan="7" class="vazio"><i class="bi bi-check2-circle"></i>Fila de triagem vazia.</td></tr>
+      <tr><td colspan="7" class="vazio">Fila de triagem vazia.</td></tr>
     {% endfor %}
     </tbody>
   </table>
@@ -52,12 +56,12 @@
 
 <div class="cartao cartao-tabela">
   <div class="cartao-titulo px-3 pt-3 justify-content-between">
-    <span><i class="bi bi-pause-circle text-primary"></i> Pendentes com o cliente (SLA pausado)</span>
+    <span>Pendentes com o cliente (SLA pausado)</span>
     <a class="small fw-normal" href="{% url 'chamados:lista' %}?status=PENDENTE_CLIENTE">Ver todas</a>
   </div>
   <div class="table-responsive">
   <table class="table tabela-erp">
-    <thead><tr><th>Atividade</th><th>Titulo / cliente</th><th>Pausada desde</th></tr></thead>
+    <thead><tr><th>Atividade</th><th>Título / cliente</th><th>Pausada desde</th></tr></thead>
     <tbody>
     {% for c in pendentes_cliente %}
       <tr><td><a href="{% url 'chamados:detalhe' c.pk %}">{{ c.numero }}</a></td>

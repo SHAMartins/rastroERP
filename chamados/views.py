@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from clientes.models import Cliente
+from config.planilha import resposta_csv
 from ordens.forms import ComentarioForm, MaterialForm, StatusForm
 from ordens.models import OrdemServico
 from ordens.views import eventos_da_os, prefixo
@@ -15,13 +16,14 @@ from seguranca.permissoes import exigir, pode_operar_os
 from . import services
 from .forms import AnexoForm, GerarOSForm, NovoChamadoForm, StatusChamadoForm
 from .campos import TIPOS, detalhes_legiveis, rotulo
+from .templatetags.chamados_tags import SITUACOES
 from .models import Chamado, Tipo
 
-ROTULOS_HISTORICO = {"criacao": "Abertura", "os": "Ordem de servico"}
+ROTULOS_HISTORICO = {"criacao": "Abertura", "os": "Ordem de serviço"}
 
 
-@login_required
-def lista(request):
+def _filtrar(request):
+    """Filtros da lista de atividades. Usados pela tela e pela exportacao (a planilha sai igual a tela)."""
     chamados = Chamado.objects.select_related("cliente", "responsavel").prefetch_related(
         Prefetch("ordens", queryset=OrdemServico.objects.select_related("responsavel")))
     visao = request.GET.get("visao", "abertos")
@@ -45,10 +47,33 @@ def lista(request):
                                    | Q(cliente__nome__icontains=busca) | Q(cliente_final__icontains=busca)
                                    | Q(ativo__icontains=busca) | Q(endereco__icontains=busca)
                                    | Q(ordens__numero__icontains=busca)).distinct()
+    return chamados, {"visao": visao, "status": status, "tipo": tipo, "busca": busca, "minhas": minhas}
+
+
+@login_required
+def lista(request):
+    chamados, filtros = _filtrar(request)
     pagina = Paginator(chamados, 25).get_page(request.GET.get("pagina"))
     return render(request, "chamados/lista.html", {
-        "pagina": pagina, "visao": visao, "status": status, "tipo": tipo, "busca": busca, "minhas": minhas,
-        "status_choices": Chamado.Status.choices, "tipo_choices": Tipo.choices})
+        "pagina": pagina, **filtros, "status_choices": Chamado.Status.choices, "tipo_choices": Tipo.choices})
+
+
+@login_required
+def exportar(request):
+    """Planilha das atividades, com os mesmos filtros da tela."""
+    chamados, _ = _filtrar(request)
+    linhas = []
+    for c in chamados:
+        ordens = list(c.ordens.all())
+        linhas.append((
+            c.numero, c.get_tipo_display(), c.get_status_display(), c.get_prioridade_display(), c.cliente.nome,
+            c.cliente_final, c.titulo, c.ativo, c.aberto_em, c.prazo_solucao_efetivo, c.resolvido_em,
+            SITUACOES[c.situacao_sla][0], ", ".join(o.numero for o in ordens),
+            ", ".join(sorted({str(o.responsavel) for o in ordens if o.responsavel})),
+        ))
+    return resposta_csv("atividades", [
+        "Número", "Tipo", "Status", "Prioridade", "Cliente", "Cliente final / unidade", "Título", "Ativo / circuito",
+        "Aberta em", "Prazo de solução", "Resolvida em", "Situação do SLA", "OSs", "Técnicos"], linhas)
 
 
 @login_required
@@ -147,9 +172,9 @@ def comentar(request, pk):
     form = ComentarioForm(request.POST)
     try:
         if not form.is_valid():
-            raise ValueError("Escreva o comentario antes de enviar.")
+            raise ValueError("Escreva o comentário antes de enviar.")
         services.comentar(chamado, request.user, form.cleaned_data["texto"])
-        messages.success(request, "Comentario adicionado.")
+        messages.success(request, "Comentário adicionado.")
     except ValueError as e:
         messages.error(request, str(e))
     return redirect("chamados:detalhe", pk=pk)

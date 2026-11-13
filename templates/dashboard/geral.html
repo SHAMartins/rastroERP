@@ -4,8 +4,8 @@
 {% block content %}
 <div class="cabecalho-pagina">
   <div>
-    <h2>Ola, {{ user.first_name|default:user.get_username }}</h2>
-    <p>Todas as atividades (manutencao e instalacao) e o andamento das ordens de servico.</p>
+    <h2>Visão geral</h2>
+    <p>Atividades de manutenção e instalação e andamento das ordens de serviço · atualizado em {% now "d/m/Y H:i" %}</p>
   </div>
 </div>
 {% include "dashboard/_nav.html" %}
@@ -15,49 +15,53 @@
 </div>
 
 <div class="row g-3 mb-3">
-  <div class="col-md-4"><a class="cartao kpi text-reset text-decoration-none h-100" href="{% url 'painel_triagem' %}">
-    <span class="kpi-icone tom-azul"><i class="bi bi-inbox"></i></span>
-    <div><div class="kpi-valor">{{ aguardando_triagem }}</div><div class="kpi-rotulo">Aguardando triagem</div></div></a></div>
+  <div class="col-md-4"><a class="cartao kpi h-100" href="{% url 'painel_triagem' %}">
+    <div class="kpi-rotulo">Aguardando triagem</div>
+    <div class="kpi-valor">{{ aguardando_triagem }}</div>
+    <div class="kpi-detalhe">abrir o painel de triagem</div></a></div>
   {% for t in por_tipo %}
-  <div class="col-md-4"><a class="cartao kpi text-reset text-decoration-none h-100" href="{% url t.url %}">
-    <span class="kpi-icone {% if t.codigo == 'MANUTENCAO' %}tom-amarelo{% else %}tom-roxo{% endif %}"><i class="bi {% if t.codigo == 'MANUTENCAO' %}bi-wrench-adjustable{% else %}bi-router{% endif %}"></i></span>
-    <div><div class="kpi-valor">{{ t.total }}</div><div class="kpi-rotulo">{{ t.nome }} em aberto <i class="bi bi-arrow-right-short"></i></div></div></a></div>
+  <div class="col-md-4"><a class="cartao kpi h-100" href="{% url t.url %}">
+    <div class="kpi-rotulo">{{ t.nome }} em aberto</div>
+    <div class="kpi-valor">{{ t.total }}</div>
+    <div class="kpi-detalhe">abrir o painel de {{ t.nome|lower }}</div></a></div>
   {% endfor %}
 </div>
 
-{% if alertas %}
+{% if reposicoes %}
 <div class="alert alert-warning d-flex gap-2">
-  <i class="bi bi-exclamation-circle"></i>
-  <div><strong><a class="alert-link" href="{% url 'estoque:produtos' %}?filtro=baixo">Repor estoque:</a></strong>
-    {% for p in alertas %}{{ p.nome }}{% if p.cliente %} ({{ p.cliente }}){% endif %} - saldo {{ p.saldo }}{% if not forloop.last %}; {% endif %}{% endfor %}</div>
+  <i class="bi bi-cart-check"></i>
+  <div><strong><a class="alert-link" href="{% url 'estoque:reposicoes' %}">{{ reposicoes|length }} tarefa{{ reposicoes|length|pluralize }} de reposição aberta{{ reposicoes|length|pluralize }}:</a></strong>
+    {% for t in reposicoes %}{{ t.produto.nome }} (repor {{ t.quantidade_sugerida }} {{ t.produto.unidade }}){% if not forloop.last %}; {% endif %}{% endfor %}</div>
 </div>
 {% endif %}
 
+{# Painel operacional (Few, 2006): primeiro o que pede acao agora (fila), depois a analise (graficos) #}
+{% if minhas %}
+<div class="cartao cartao-tabela mb-3">
+  <div class="cartao-titulo px-3 pt-3 justify-content-between">
+    <span>Minhas OSs</span>
+    <a class="small fw-normal" href="{% url 'chamados:lista' %}?minhas=1">Ver todas</a>
+  </div>
+  {% include "dashboard/_tabela_os.html" with ordens=minhas %}
+</div>
+{% endif %}
+
+<div class="cartao cartao-tabela mb-3">
+  <div class="cartao-titulo px-3 pt-3 justify-content-between">
+    <span>Fila por prazo de SLA</span>
+    <a class="small fw-normal" href="{% url 'chamados:lista' %}">Ver todas</a>
+  </div>
+  {% include "dashboard/_fila.html" %}
+</div>
+
 <div class="row g-3 mb-3">
   <div class="col-lg-6">{% include "dashboard/_grafico_status.html" with titulo="Atividades por status" icone="bi-headset" dados=status_chamados id="g-atividades" %}</div>
-  <div class="col-lg-6">{% include "dashboard/_grafico_status.html" with titulo="Ordens de servico por status" icone="bi-tools" dados=status_os id="g-os" %}</div>
+  <div class="col-lg-6">{% include "dashboard/_grafico_status.html" with titulo="Ordens de serviço por status" icone="bi-tools" dados=status_os id="g-os" %}</div>
 </div>
-<p class="small text-muted mt-n2">Status mostram tudo que esta em aberto e o que foi encerrado nos ultimos 30 dias.</p>
+<p class="small text-muted mt-n2">Status mostram tudo que está em aberto e o que foi encerrado nos últimos 30 dias.</p>
 
-<div class="row g-3">
-  <div class="col-xl-7">
-    <div class="cartao cartao-tabela h-100">
-      <div class="cartao-titulo px-3 pt-3 justify-content-between">
-        <span><i class="bi bi-list-ol text-primary"></i> Fila por prazo de SLA</span>
-        <a class="small fw-normal" href="{% url 'chamados:lista' %}">Ver todas</a>
-      </div>
-      {% include "dashboard/_fila.html" %}
-    </div>
-  </div>
-  <div class="col-xl-5">
-    <div class="cartao cartao-tabela h-100">
-      <div class="cartao-titulo px-3 pt-3 justify-content-between">
-        <span><i class="bi bi-person-check text-primary"></i> Minhas OSs</span>
-        <a class="small fw-normal" href="{% url 'chamados:lista' %}?minhas=1">Ver todas</a>
-      </div>
-      {% include "dashboard/_tabela_os.html" with ordens=minhas vazio="Nenhuma OS atribuida a voce." %}
-    </div>
-  </div>
-</div>
+{% include "dashboard/_evolucao.html" %}
+
+{% if tecnicos is not None %}{% include "dashboard/_tecnicos.html" %}{% endif %}
 {% endblock %}
 {% block scripts %}{% include "dashboard/_scripts.html" %}{% endblock %}

@@ -21,7 +21,7 @@ def test_documento_invalido_ou_repetido(logado, cliente):
     r = logado.post("/cadastros/clientes/novo/", {"nome": "X", "documento": "123"})
     assert "documento" in r.context["form"].errors
     r = logado.post("/cadastros/clientes/novo/", {"nome": "Y", "documento": "11111111000111"})   # = fixture
-    assert "Ja existe" in str(r.context["form"].errors["documento"])
+    assert "Já existe" in str(r.context["form"].errors["documento"])
 
 
 def test_contrato_de_sla_substitui_o_padrao_na_abertura(logado, usuario, cliente):
@@ -57,8 +57,8 @@ def test_editar_sla_padrao(logado):
 
 
 def test_cadastrar_servico(logado, cliente):
-    logado.post("/cadastros/servicos/", {"nome": "Vistoria tecnica", "cliente": cliente.pk})
-    assert Servico.objects.get(nome="Vistoria tecnica").cliente == cliente
+    logado.post("/cadastros/servicos/", {"nome": "Vistoria técnica", "cliente": cliente.pk})
+    assert Servico.objects.get(nome="Vistoria técnica").cliente == cliente
 
 
 def test_paginas_de_cadastro_renderizam(logado, cliente):

@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from chamados.models import AnexoChamado, Chamado, ComentarioChamado, HistoricoChamado, PoliticaSLA
 from clientes.models import Cliente, Servico
-from estoque.models import ItemSerie, MovimentacaoEstoque, Produto
+from estoque.models import ItemSerie, MovimentacaoEstoque, Produto, TarefaReposicao
 from ordens.models import Anexo, Comentario, HistoricoAlteracao, OrdemServico
 
 
@@ -29,6 +29,12 @@ class ProdutoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Produto
+        fields = "__all__"
+
+
+class TarefaReposicaoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TarefaReposicao
         fields = "__all__"
 
 
@@ -100,7 +106,7 @@ class MaterialEntradaSerializer(serializers.Serializer):
     produto_id = serializers.IntegerField()
     quantidade = serializers.IntegerField(min_value=1, required=False, help_text="Opcional se informar numeros_serie")
     numeros_serie = serializers.ListField(child=serializers.CharField(), required=False,
-                                          help_text="Obrigatorio para produto que controla numero de serie")
+                                          help_text="Obrigatório para produto que controla número de série")
 
 
 class ComentarioChamadoSerializer(serializers.ModelSerializer):

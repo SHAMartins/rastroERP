@@ -23,15 +23,15 @@ def test_os_herda_cliente_e_endereco_do_chamado(chamado, ordem):
 
 def test_servico_exclusivo_de_outro_cliente_e_recusado(usuario, chamado):
     outro = Cliente.objects.create(nome="Outro", documento="22.222.222/0001-22")
-    servico_outro = Servico.objects.create(cliente=outro, nome="Manutencao especial")
+    servico_outro = Servico.objects.create(cliente=outro, nome="Manutenção especial")
     with pytest.raises(ValueError):
         chamados.gerar_os(chamado, usuario, servico=servico_outro)
 
 
 def test_comentario_da_os_aparece_na_atividade(logado, usuario, chamado, ordem):
-    services.comentar(ordem, usuario, "Tecnico a caminho")
+    services.comentar(ordem, usuario, "Técnico a caminho")
     html = logado.get(f"/atividades/{chamado.pk}/").content.decode()
-    assert "Tecnico a caminho" in html and f"OS {ordem.numero}" in html
+    assert "Técnico a caminho" in html and f"OS {ordem.numero}" in html
 
 
 def test_usar_material_baixa_estoque(logado, usuario, ordem):

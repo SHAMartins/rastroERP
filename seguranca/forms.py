@@ -14,7 +14,7 @@ class LoginForm(AuthenticationForm):
     error_messages = {
         **AuthenticationForm.error_messages,
         # Mensagem unica: nao revela se o usuario existe
-        "invalid_login": "Usuario ou senha incorretos.",
+        "invalid_login": "Usuário ou senha incorretos.",
         "bloqueado": "Muitas tentativas de login. Aguarde alguns minutos e tente de novo.",
     }
 
@@ -52,7 +52,7 @@ class UsuarioForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ["username", "first_name", "last_name", "email", "is_active"]
-        labels = {"username": "Usuario (login)", "is_active": "Ativo (pode entrar no sistema)"}
+        labels = {"username": "Usuário (login)", "is_active": "Ativo (pode entrar no sistema)"}
         help_texts = {"username": ""}
 
     def __init__(self, *args, editor, **kwargs):
@@ -74,7 +74,7 @@ class UsuarioForm(forms.ModelForm):
         senha, senha2 = dados.get("senha"), dados.get("senha2")
         if senha or senha2:
             if senha != senha2:
-                self.add_error("senha2", "As senhas nao conferem.")
+                self.add_error("senha2", "As senhas não conferem.")
             else:
                 usuario = self.instance if self.instance.pk else User(username=dados.get("username", ""),
                                                                      email=dados.get("email", ""))
@@ -85,9 +85,9 @@ class UsuarioForm(forms.ModelForm):
         # Evita o administrador se trancar para fora do sistema
         if self.instance.pk == self.editor.pk:
             if not dados.get("is_active"):
-                self.add_error("is_active", "Voce nao pode desativar a si mesmo.")
+                self.add_error("is_active", "Você não pode desativar a si mesmo.")
             if dados.get("perfil") != ADMINISTRADOR and not self.instance.is_superuser:
-                self.add_error("perfil", "Voce nao pode tirar o seu proprio perfil de Administrador.")
+                self.add_error("perfil", "Você não pode tirar o seu próprio perfil de Administrador.")
         return dados
 
     def save(self, commit=True):

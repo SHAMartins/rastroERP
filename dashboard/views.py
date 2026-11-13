@@ -9,15 +9,19 @@ from django.utils import timezone
 
 from chamados.campos import TIPOS
 from chamados.models import Chamado, Tipo
-from estoque.models import Produto
+from estoque.models import TarefaReposicao
+from config.planilha import resposta_csv
 from ordens.models import OrdemServico
+from seguranca.permissoes import exigir
+
+from .indicadores import desempenho_tecnicos, evolucao_semanal, graficos_evolucao, os_sem_tecnico
 
 OS_ABERTAS = ["ABERTA", "AGENDADA", "EM_ANDAMENTO", "PENDENTE", "PAUSADA"]
 # Mesmas cores das pilulas de status (static/css/erp.css)
-CORES_CHAMADO = {"NOVO": "#2563eb", "EM_ATENDIMENTO": "#f59e0b", "PENDENTE_CLIENTE": "#94a3b8",
-                 "RESOLVIDO": "#16a34a", "CANCELADO": "#dc2626"}
-CORES_OS = {"ABERTA": "#2563eb", "AGENDADA": "#7c3aed", "EM_ANDAMENTO": "#f59e0b", "PENDENTE": "#ea580c",
-            "PAUSADA": "#94a3b8", "FECHADA": "#16a34a", "CANCELADA": "#dc2626"}
+CORES_CHAMADO = {"NOVO": "#1f6f8b", "EM_ATENDIMENTO": "#b26a00", "PENDENTE_CLIENTE": "#7a868d",
+                 "RESOLVIDO": "#2e7d4f", "CANCELADO": "#a7b1b6"}
+CORES_OS = {"ABERTA": "#1f6f8b", "AGENDADA": "#5b4b8a", "EM_ANDAMENTO": "#b26a00", "PENDENTE": "#c4560d",
+            "PAUSADA": "#7a868d", "FECHADA": "#2e7d4f", "CANCELADA": "#a7b1b6"}
 JANELA = 30   # dias considerados para indicadores de resultado (resolvidos, cumprimento, MTTR)
 
 
@@ -97,8 +101,14 @@ def geral(request):
         "fila": abertos[:8],
         "minhas": ordens.filter(status__in=OS_ABERTAS, responsavel=request.user)
                   .select_related("cliente", "chamado").order_by("data_agendada")[:6],
-        "alertas": [p for p in Produto.objects.filter(ativo=True) if p.abaixo_do_minimo],
+        "reposicoes": TarefaReposicao.objects.filter(status=TarefaReposicao.Status.ABERTA)
+                      .select_related("produto").order_by("criada_em"),
+        "evolucao": graficos_evolucao(evolucao_semanal(chamados)),
     }
+    # Carga por tecnico: so quem coordena a equipe (Coordenacao/Administrador)
+    if request.user.has_perm("ordens.operar_qualquer_os"):
+        context["tecnicos"] = desempenho_tecnicos(ordens)
+        context["os_sem_tecnico"] = os_sem_tecnico(ordens)
     return render(request, "dashboard/geral.html", context)
 
 
@@ -136,13 +146,14 @@ def manutencao(request):
     chamados = Chamado.objects.filter(tipo=Tipo.MANUTENCAO)
     ind = _indicadores(chamados)
     context = {
-        "titulo": "Manutencao", "tipo": Tipo.MANUTENCAO, "icone": "bi-wrench-adjustable", "ind": ind,
+        "titulo": "Manutenção", "tipo": Tipo.MANUTENCAO, "icone": "bi-wrench-adjustable", "ind": ind,
         "status_chamados": _status_chamados(chamados),
         "status_os": _status_os(OrdemServico.objects.filter(chamado__tipo=Tipo.MANUTENCAO)),
         "seguranca": sum(c.detalhes.get("risco") == "SEGURANCA" for c in ind["fila"]),
         "afetados": _contagem_detalhe(ind["fila"], Tipo.MANUTENCAO, "afetados"),
         "top_ativos": _ranking(chamados, "ativo"),
         "top_locais": _ranking(chamados, "cliente_final"),
+        "evolucao": graficos_evolucao(evolucao_semanal(chamados)),
     }
     return render(request, "dashboard/manutencao.html", context)
 
@@ -157,12 +168,36 @@ def instalacao(request):
                                           data_agendada__date__lte=hoje + timedelta(days=7))
               .select_related("chamado", "cliente", "responsavel").order_by("data_agendada"))
     context = {
-        "titulo": "Instalacao", "tipo": Tipo.INSTALACAO, "icone": "bi-router", "ind": ind,
+        "titulo": "Instalação", "tipo": Tipo.INSTALACAO, "icone": "bi-router", "ind": ind,
         "status_chamados": _status_chamados(chamados),
         "status_os": _status_os(OrdemServico.objects.filter(chamado__tipo=Tipo.INSTALACAO)),
         "com_pendencia": [c for c in ind["fila"] if c.detalhes.get("prerequisitos") == "PENDENTE"],
         "por_servico": _contagem_detalhe(ind["fila"], Tipo.INSTALACAO, "servico_contratado"),
         "agenda": agenda,
         "sem_os": [c for c in ind["fila"] if not c.ordens.exists()][:8],
+        "evolucao": graficos_evolucao(evolucao_semanal(chamados)),
     }
     return render(request, "dashboard/instalacao.html", context)
+
+
+# ---------- Relatorios em planilha ----------
+
+@login_required
+def exportar_evolucao(request):
+    """Indicadores semana a semana. ?tipo=MANUTENCAO|INSTALACAO filtra; sem tipo = todas as atividades."""
+    tipo = request.GET.get("tipo", "")
+    chamados = Chamado.objects.filter(tipo=tipo) if tipo in Tipo.values else Chamado.objects.all()
+    linhas = [(l["inicio"], l["abertas"], l["resolvidas"], l["backlog"], l["mttr_h"], l["sla_pct"])
+              for l in evolucao_semanal(chamados)]
+    nome = f"evolucao-{tipo.lower()}" if tipo in Tipo.values else "evolucao"
+    return resposta_csv(nome, ["Semana (início)", "Abertas", "Resolvidas", "Backlog no fim da semana",
+                               "MTTR (horas)", "SLA cumprido (%)"], linhas)
+
+
+@login_required
+def exportar_tecnicos(request):
+    exigir(request.user, "ordens.operar_qualquer_os")
+    linhas = [(t["tecnico"].get_full_name() or t["tecnico"].get_username(), t["em_aberto"], t["atrasadas"],
+               t["concluidas"], t["tempo_medio_h"]) for t in desempenho_tecnicos(OrdemServico.objects.all())]
+    return resposta_csv("tecnicos", ["Técnico", "OSs em aberto", "Atrasadas (agenda vencida)",
+                                     f"Concluídas ({JANELA} dias)", "Tempo médio de execução (horas)"], linhas)

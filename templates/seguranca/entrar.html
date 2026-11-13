@@ -7,11 +7,11 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link href="{% static 'css/erp.css' %}" rel="stylesheet">
 </head>
-<body class="d-flex align-items-center justify-content-center min-vh-100 p-3" style="background: var(--erp-sidebar)">
+<body class="tela-login d-flex align-items-center justify-content-center min-vh-100 p-3">
   <main class="cartao p-4" style="width: 100%; max-width: 380px">
-    <div class="d-flex align-items-center gap-2 mb-4">
-      <span class="logo d-grid" style="width:40px;height:40px;border-radius:12px;place-items:center;background:linear-gradient(135deg,#3b82f6,#22d3ee);color:#fff"><i class="bi bi-grid-1x2-fill"></i></span>
-      <div><div class="fw-bold">Rastro</div><div class="small text-muted">Gestao para pequenas empresas</div></div>
+    <div class="mb-4">
+      <div class="marca-nome" style="color: var(--erp-accent)">Rastro</div>
+      <div class="small text-muted">Gestão de serviços e estoque</div>
     </div>
     <h1 class="h5 mb-3">Entrar</h1>
     {% for e in form.non_field_errors %}<div class="alert alert-danger small d-flex gap-2"><i class="bi bi-exclamation-octagon"></i>{{ e }}</div>{% endfor %}
@@ -19,7 +19,7 @@
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ next }}">
       <div class="mb-3">
-        <label class="form-label" for="{{ form.username.id_for_label }}">Usuario</label>
+        <label class="form-label" for="{{ form.username.id_for_label }}">Usuário</label>
         {{ form.username }}
       </div>
       <div class="mb-4">
@@ -28,7 +28,7 @@
       </div>
       <button class="btn btn-primary w-100"><i class="bi bi-box-arrow-in-right"></i> Entrar</button>
     </form>
-    <p class="small text-muted mt-4 mb-0"><i class="bi bi-shield-lock"></i> Apos {{ max_falhas|default:"5" }} tentativas erradas o acesso fica bloqueado por alguns minutos.
+    <p class="small text-muted mt-4 mb-0"><i class="bi bi-shield-lock"></i> Após {{ max_falhas|default:"5" }} tentativas erradas o acesso fica bloqueado por alguns minutos.
       Esqueceu a senha? Fale com o administrador.</p>
   </main>
 </body>

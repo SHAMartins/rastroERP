@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ItemSerie, MovimentacaoEstoque, Produto
+from .models import ItemSerie, MovimentacaoEstoque, Produto, TarefaReposicao
 
 
 @admin.register(Produto)
@@ -37,6 +37,23 @@ class MovimentacaoAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         # Movimentacoes so nascem pelas regras (entrada, ajuste com justificativa, baixa por OS)
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(TarefaReposicao)
+class TarefaReposicaoAdmin(admin.ModelAdmin):
+    """Somente leitura: as tarefas nascem e se encerram pelas regras do estoque."""
+    list_display = ("produto", "status", "quantidade_sugerida", "saldo_na_abertura", "responsavel", "criada_em",
+                    "encerrada_em")
+    list_filter = ("status",)
+
+    def has_add_permission(self, request):
         return False
 
     def has_change_permission(self, request, obj=None):

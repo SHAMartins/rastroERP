@@ -59,7 +59,7 @@ class NovoChamadoForm(forms.ModelForm):
         dados = super().clean()
         # Ativo e obrigatorio so quando muda a triagem (algo que parou ou quebrou)
         if dados.get("tipo") == "MANUTENCAO" and not dados.get("ativo", "").strip():
-            self.add_error("ativo", "Obrigatorio para manutencao.")
+            self.add_error("ativo", "Obrigatório para manutenção.")
         return dados
 
     def dados_chamado(self):
@@ -71,7 +71,7 @@ class NovoChamadoForm(forms.ModelForm):
 
 class StatusChamadoForm(forms.Form):
     status = forms.ChoiceField(choices=Chamado.Status.choices)
-    nota_resolucao = forms.CharField(label="Nota de resolucao", required=False,
+    nota_resolucao = forms.CharField(label="Nota de resolução", required=False,
                                      widget=forms.Textarea(attrs={"rows": 3}))
     causa = forms.CharField(label="Causa", required=False, max_length=150)
     categoria_encerramento = forms.ChoiceField(label="Categoria de encerramento", required=False,
@@ -96,14 +96,14 @@ class GerarOSForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["servico"].queryset = servicos_do_cliente(chamado.cliente_id)
         self.fields["responsavel"].queryset = get_user_model().objects.filter(is_active=True)
-        self.fields["descricao"].help_text = "Instrucoes para o tecnico. Endereco e contato vem do chamado."
+        self.fields["descricao"].help_text = "Instruções para o técnico. Endereço e contato vêm do chamado."
         bootstrap(self)
 
 
 class AnexoForm(forms.Form):
     arquivo = forms.FileField(validators=[validar_anexo], help_text=AJUDA_ANEXO)
     descricao = forms.CharField(required=False, max_length=150, widget=forms.TextInput(
-        attrs={"placeholder": "Descricao (opcional)"}))
+        attrs={"placeholder": "Descrição (opcional)"}))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

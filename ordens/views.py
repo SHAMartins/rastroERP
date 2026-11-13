@@ -59,7 +59,7 @@ def alterar_status(request, pk):
     form = StatusForm(request.POST, prefix=prefixo(ordem))
     try:
         if not form.is_valid():
-            raise ValueError("Status invalido.")
+            raise ValueError("Status inválido.")
         services.atualizar_os(ordem, request.user, status=form.cleaned_data["status"])
         messages.success(request, f"Status da OS {ordem.numero} atualizado.")
     except ValueError as e:

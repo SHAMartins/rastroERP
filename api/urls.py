@@ -13,6 +13,7 @@ router.register("servicos", views.ServicoViewSet)
 router.register("produtos", views.ProdutoViewSet)
 router.register("movimentacoes", views.MovimentacaoViewSet)
 router.register("itens-serie", views.ItemSerieViewSet, basename="itemserie")
+router.register("reposicoes", views.TarefaReposicaoViewSet, basename="reposicao")
 router.register("ordens", views.OrdemViewSet)
 
 urlpatterns = [

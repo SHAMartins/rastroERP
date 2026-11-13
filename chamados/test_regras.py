@@ -53,9 +53,9 @@ def test_instalacao_nao_exige_ativo(usuario, cliente):
 
 def test_cada_tipo_exige_os_seus_campos(usuario, cliente):
     # Os campos obrigatorios da manutencao nao servem para instalacao
-    with pytest.raises(ValueError, match="Servico"):
+    with pytest.raises(ValueError, match="Serviço"):
         services.abrir_chamado(usuario, cliente=cliente, **{**DADOS, "tipo": "INSTALACAO"})
-    with pytest.raises(ValueError, match="Quem esta afetado"):
+    with pytest.raises(ValueError, match="Quem está afetado"):
         services.abrir_chamado(usuario, cliente=cliente, **{**DADOS, "detalhes": {"sintoma": "x"}})
 
 
@@ -67,12 +67,12 @@ def test_manutencao_programada_nao_exige_data_do_problema(usuario, cliente):
 
 def test_detalhes_descartam_campos_de_outro_tipo_e_validam_opcoes(usuario, cliente):
     c = services.abrir_chamado(usuario, cliente=cliente,
-                               **{**DADOS, "detalhes": {**DETALHES_INCIDENTE, "escopo": "nao e da manutencao"}})
+                               **{**DADOS, "detalhes": {**DETALHES_INCIDENTE, "escopo": "não e da manutenção"}})
     assert "escopo" not in c.detalhes
-    with pytest.raises(ValueError, match="Opcao invalida"):
+    with pytest.raises(ValueError, match="Opção inválida"):
         services.abrir_chamado(usuario, cliente=cliente,
                                **{**DADOS, "detalhes": {**DETALHES_INCIDENTE, "afetados": "TODO_MUNDO"}})
-    with pytest.raises(ValueError, match="Data invalida"):
+    with pytest.raises(ValueError, match="Data inválida"):
         services.abrir_chamado(usuario, cliente=cliente,
                                **{**DADOS, "detalhes": {**DETALHES_INCIDENTE, "desde_quando": "ontem"}})
 
@@ -80,7 +80,7 @@ def test_detalhes_descartam_campos_de_outro_tipo_e_validam_opcoes(usuario, clien
 def test_alterar_detalhe_gera_historico(usuario, chamado):
     services.atualizar_chamado(chamado, usuario, detalhes={**chamado.detalhes, "afetados": "VARIAS"})
     h = chamado.historico.get(campo="detalhe.afetados")
-    assert (h.valor_anterior, h.valor_novo) == ("Toda a unidade", "Varias unidades")
+    assert (h.valor_anterior, h.valor_novo) == ("Toda a unidade", "Várias unidades")
 
 
 def test_reclassificar_recalcula_prioridade_e_prazo(usuario, chamado):

@@ -60,7 +60,7 @@ def usuarios(request):
 def usuario_form(request, pk=None):
     usuario = get_object_or_404(User, pk=pk) if pk else None
     if usuario and usuario.is_superuser and not request.user.is_superuser:
-        raise PermissionDenied("So um superusuario pode alterar outro superusuario.")
+        raise PermissionDenied("Só um superusuário pode alterar outro superusuário.")
     if not usuario and not request.user.has_perm("auth.add_user"):
         raise PermissionDenied
     form = UsuarioForm(request.POST or None, instance=usuario, editor=request.user)
@@ -70,7 +70,7 @@ def usuario_form(request, pk=None):
             registrar(EventoSeguranca.Tipo.USUARIO_CRIADO, salvo, detalhe=f"Perfil {form.cleaned_data['perfil']}")
         elif form.cleaned_data.get("senha"):
             registrar(EventoSeguranca.Tipo.SENHA_ALTERADA, salvo, detalhe="Senha redefinida pelo administrador")
-        messages.success(request, f"Usuario {salvo.username} salvo.")
+        messages.success(request, f"Usuário {salvo.username} salvo.")
         return redirect("seguranca:usuarios")
     return render(request, "seguranca/usuario.html", {"form": form, "usuario": usuario, "perfis": PERFIS})
 
@@ -95,5 +95,5 @@ def acesso_negado(request, exception=None):
     usuario = request.user if request.user.is_authenticated else None
     registrar(EventoSeguranca.Tipo.ACESSO_NEGADO, usuario, ip=bloqueio.ip_do_request(request),
               detalhe=f"{request.method} {request.path}")
-    motivo = str(exception) if exception and str(exception) else "Seu perfil nao permite esta acao."
+    motivo = str(exception) if exception and str(exception) else "Seu perfil não permite esta ação."
     return render(request, "403.html", {"motivo": motivo}, status=403)

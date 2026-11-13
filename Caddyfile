@@ -11,6 +11,9 @@
 
 	handle_path /static/* {
 		root * /srv/static
+		# arquivo com hash no nome (gerado pelo collectstatic) nunca muda: cache de 1 ano
+		@versionado path_regexp \.[0-9a-f]{12}\.[a-z0-9]+$
+		header @versionado Cache-Control "public, max-age=31536000, immutable"
 		file_server
 	}
 

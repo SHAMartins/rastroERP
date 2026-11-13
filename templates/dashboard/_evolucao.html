@@ -1,0 +1,28 @@
+{# Evolucao semanal (12 semanas). Parametros: evolucao, tipo (opcional, filtra a planilha) #}
+<div class="cartao mb-3">
+  <div class="cartao-titulo justify-content-between">
+    <span>Evolução nas últimas 12 semanas</span>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'exportar_evolucao' %}{% if tipo %}?tipo={{ tipo }}{% endif %}">
+      <i class="bi bi-file-earmark-spreadsheet"></i> Exportar planilha</a>
+  </div>
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="small text-muted mb-2">Volume: abertas e resolvidas por semana, e o que ficou em aberto (backlog)</div>
+      <div style="position: relative; height: 240px">
+        <canvas id="g-evolucao-volume" role="img" aria-label="Atividades abertas, resolvidas e backlog por semana"
+                data-grafico="dados-evolucao-volume" data-grafico-tipo="combinado"></canvas>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="small text-muted mb-2">Qualidade: tempo médio de resolução (MTTR) e % de SLA cumprido</div>
+      <div style="position: relative; height: 240px">
+        <canvas id="g-evolucao-qualidade" role="img" aria-label="MTTR e percentual de SLA cumprido por semana"
+                data-grafico="dados-evolucao-qualidade" data-grafico-tipo="combinado"></canvas>
+      </div>
+    </div>
+  </div>
+  {{ evolucao.volume|json_script:"dados-evolucao-volume" }}
+  {{ evolucao.qualidade|json_script:"dados-evolucao-qualidade" }}
+  <p class="small text-muted mt-2 mb-0">Semanas de segunda a domingo. Backlog = atividades em aberto no fim de cada semana.
+    O MTTR desconta o tempo em que a atividade ficou pendente com o cliente.</p>
+</div>

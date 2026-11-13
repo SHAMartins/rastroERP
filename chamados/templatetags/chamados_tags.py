@@ -29,8 +29,8 @@ def _duracao(segundos):
 
 @register.simple_tag
 def sla_badge(chamado):
-    rotulo, icone = SITUACOES[chamado.situacao_sla]
-    return format_html('<span class="pilula sla-{}"><i class="bi {}"></i>{}</span>', chamado.situacao_sla, icone, rotulo)
+    rotulo, _ = SITUACOES[chamado.situacao_sla]
+    return format_html('<span class="pilula sla-{}">{}</span>', chamado.situacao_sla, rotulo)
 
 
 @register.simple_tag
@@ -40,15 +40,14 @@ def sla_restante(chamado):
     if situacao in ("SEM_SLA", "CUMPRIDO", "VIOLADO"):
         return ""
     if situacao == "PAUSADO":
-        return "relogio parado"
+        return "relógio parado"
     segundos = (chamado.prazo_solucao_efetivo - timezone.now()).total_seconds()
-    return f"faltam {_duracao(segundos)}" if segundos >= 0 else f"estourou ha {_duracao(segundos)}"
+    return f"faltam {_duracao(segundos)}" if segundos >= 0 else f"estourou há {_duracao(segundos)}"
 
 
 @register.simple_tag
 def tipo_badge(chamado):
-    return format_html('<span class="pilula tp-{}"><i class="bi {}"></i>{}</span>',
-                       chamado.tipo, ICONES_TIPO.get(chamado.tipo, "bi-tag"), chamado.get_tipo_display())
+    return format_html('<span class="pilula tp-{}">{}</span>', chamado.tipo, chamado.get_tipo_display())
 
 
 @register.filter
